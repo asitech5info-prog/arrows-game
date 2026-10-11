@@ -1,14 +1,19 @@
-name: Build Android APK
+name: Build and Release Android APK
 
 on:
   push:
     branches: [ master, main ]
+    tags:
+      - 'v*'
   pull_request:
     branches: [ master, main ]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
-  build-apk:
+  build-and-release:
     runs-on: ubuntu-latest
 
     steps:
@@ -33,13 +38,19 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
 
-      - name: Add Capacitor Android Platform
+      - name: Accept Android SDK Licenses
         run: |
-          npx cap add android || true
-          npx cap sync android
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses || true
+
+      - name: Install Android Platform 36
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36" "build-tools;36.0.0" || true
+
+      - name: Sync Capacitor Android
+        run: npx cap sync android
 
       - name: Build Debug APK
         working-directory: ./android
@@ -47,9 +58,55 @@ jobs:
           chmod +x ./gradlew
           ./gradlew assembleDebug --stacktrace
 
+      - name: Prepare APK Release Artifacts
+        id: prepare_release
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            TAG="${{ github.ref_name }}"
+          else
+            TAG="v${VERSION}"
+          fi
+          APK_NAME="Arrows-${TAG}.apk"
+          cp android/app/build/outputs/apk/debug/app-debug.apk "android/app/build/outputs/apk/debug/${APK_NAME}"
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+          echo "apk_name=${APK_NAME}" >> $GITHUB_OUTPUT
+          echo "apk_path=android/app/build/outputs/apk/debug/${APK_NAME}" >> $GITHUB_OUTPUT
+
       - name: Upload Debug APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: Arrows-Debug-APK
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          path: |
+            android/app/build/outputs/apk/debug/*.apk
           retention-days: 30
+
+      - name: Publish to GitHub Releases
+        if: github.event_name != 'pull_request'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.prepare_release.outputs.tag }}
+          name: "Arrows! ${{ steps.prepare_release.outputs.tag }}"
+          body: |
+            ## 🏹 Arrows! ${{ steps.prepare_release.outputs.tag }}
+
+            **Arrows!** is a minimalist, addictive puzzle game with 5,000 uniquely solvable levels.
+
+            ### 📲 Android Installation
+            1. Download the APK attached below: **`${{ steps.prepare_release.outputs.apk_name }}`**.
+            2. Open the file on your Android device (allow installs from your browser or file manager if prompted).
+            3. Enjoy full offline play across all 5,000 levels!
+
+            ### 🎮 Features
+            - **5,000 Verified Levels** across 6 distinct modes
+            - **Game Modes**: Standard, Zen, Time Rush, Minimalist, Mastermind, Daily Challenge
+            - **Fluid WebGL/Canvas Visuals & Sound Effects**
+            - **100% Offline Support** with persistent high-scores and progress
+          files: |
+            android/app/build/outputs/apk/debug/${{ steps.prepare_release.outputs.apk_name }}
+          draft: false
+          prerelease: false
+          generate_release_notes: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

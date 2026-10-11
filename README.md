@@ -79,5 +79,7 @@ The output APK is generated at:
 
 ---
 
-## 🤖 GitHub Actions Automated APK Builder
-Every push to `master` triggers `.github/workflows/build-apk.yml`, automatically compiling the Android APK and uploading it as a downloadable GitHub Actions artifact!
+## 🤖 GitHub Actions Automated APK Builder & Releases
+Every push to `main` triggers `.github/workflows/build-apk.yml`, automatically compiling the Android APK and:
+- Publishing the installable APK (`Arrows-v1.0.0.apk`) directly to **[GitHub Releases](https://github.com/asitech5info-prog/arrows-game/releases)**.
+- Uploading the debug APK artifact to GitHub Actions artifacts.
