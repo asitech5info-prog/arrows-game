@@ -40,6 +40,8 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
+        with:
+          build-root-directory: ./android
 
       - name: Accept Android SDK Licenses & Setup Platform
         run: |
@@ -47,7 +49,7 @@ jobs:
           yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36" || true
 
       - name: Sync Capacitor Android
-        run: npx cap sync android --verbose
+        run: npx cap sync android
 
       - name: Build Debug APK
         working-directory: ./android
