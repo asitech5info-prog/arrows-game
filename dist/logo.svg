@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4f46e5"/>
+      <stop offset="50%" stop-color="#7c3aed"/>
+      <stop offset="100%" stop-color="#ec4899"/>
+    </linearGradient>
+    <linearGradient id="arrowAcc" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#818cf8"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="16" stdDeviation="24" flood-color="#000000" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+
+  <!-- App Icon Background -->
+  <rect x="24" y="24" width="464" height="464" rx="112" fill="url(#bgGrad)" filter="url(#shadow)"/>
+
+  <!-- Geometric Interlocking Arrowhead (White) -->
+  <g filter="url(#shadow)">
+    <!-- Central Upward Arrow -->
+    <path d="M256 80 L380 220 L304 220 L304 360 L208 360 L208 220 L132 220 Z" fill="#ffffff"/>
+    
+    <!-- Outer Hook / Swirl Arrow -->
+    <path d="M160 280 L110 330 L110 400 L400 400 L400 340" fill="none" stroke="url(#arrowAcc)" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- Head of the outer hook -->
+    <polygon points="400,310 424,354 376,354" fill="#38bdf8"/>
+    
+    <!-- Core Accent Eye -->
+    <circle cx="256" cy="180" r="16" fill="#7c3aed"/>
+  </g>
+</svg>

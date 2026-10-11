@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Arrows!</string>
+    <string name="title_activity_main">Arrows!</string>
+    <string name="package_name">com.arrows.game</string>
+    <string name="custom_url_scheme">com.arrows.game</string>
+</resources>

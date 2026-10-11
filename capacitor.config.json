@@ -1,0 +1,6 @@
+{
+  "appId": "com.arrows.game",
+  "appName": "Arrows!",
+  "webDir": "dist",
+  "bundledWebRuntime": false
+}
