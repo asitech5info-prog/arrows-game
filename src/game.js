@@ -1,6 +1,19 @@
 import { soundManager } from './sounds.js';
 
 export const THEMES = {
+  cream: {
+    id: 'cream',
+    name: 'Warm Cream (Logo)',
+    bg: '#fbf9f4',
+    boardBg: '#fbf9f4',
+    arrowStroke: '#1a1f2c',
+    headFill: '#ff4d5e',
+    dotColor: '#e5decb',
+    cardBg: '#ffffff',
+    textColor: '#1a1f2c',
+    accent: '#ff4d5e',
+    multiColor: true
+  },
   mint: {
     id: 'mint',
     name: 'Mint Garden',
@@ -63,6 +76,15 @@ export const THEMES = {
   }
 };
 
+export const ARROW_PALETTE = [
+  { fill: '#ff4d5e', border: '#1a1f2c', highlight: 'rgba(255, 255, 255, 0.65)', name: 'coral' },  // Coral Red (Logo)
+  { fill: '#2eb5fa', border: '#1a1f2c', highlight: 'rgba(255, 255, 255, 0.70)', name: 'sky' },    // Sky Blue (Logo)
+  { fill: '#27324c', border: '#10141f', highlight: 'rgba(255, 255, 255, 0.40)', name: 'navy' },   // Midnight Navy (Logo)
+  { fill: '#10b981', border: '#142e23', highlight: 'rgba(255, 255, 255, 0.60)', name: 'emerald' },// Mint Green
+  { fill: '#ffa502', border: '#302110', highlight: 'rgba(255, 255, 255, 0.65)', name: 'amber' },  // Golden Amber
+  { fill: '#8854d0', border: '#211434', highlight: 'rgba(255, 255, 255, 0.60)', name: 'violet' }  // Royal Purple
+];
+
 const PRAISE_WORDS = ['Good!', 'Awesome!', 'Wonderful!', 'Eagle Eye! 👍', 'Flawless!', 'Brilliant!'];
 
 export class ArrowGame {
@@ -73,7 +95,7 @@ export class ArrowGame {
 
     this.level = null;
     this.arrows = [];
-    this.theme = THEMES.mint;
+    this.theme = THEMES.cream;
 
     // Game state
     this.lives = 3; // 3 RED droplets!
@@ -470,8 +492,9 @@ export class ArrowGame {
         color: this.theme.accent
       });
 
-      // Spawn subtle burst particles
-      this.spawnParticles(headP.x * this.cellSize, headP.y * this.cellSize);
+      // Spawn 4-pointed sparkle stars and dots (matching reference logo!)
+      const arrowColor = this.getArrowColor(arrow, false);
+      this.spawnParticles(headP.x * this.cellSize, headP.y * this.cellSize, arrowColor.fill);
 
       if (this.options.onScoreUpdate) {
         this.options.onScoreUpdate(this.score, this.combo);
@@ -495,6 +518,9 @@ export class ArrowGame {
       };
       arrow.isError = true;
       setTimeout(() => { arrow.isError = false; }, 400);
+
+      const headP = arrow.points[arrow.points.length - 1];
+      this.spawnDropletSplash(headP.x * this.cellSize, headP.y * this.cellSize);
 
       soundManager.playError();
 
@@ -571,21 +597,108 @@ export class ArrowGame {
     }
   }
 
-  spawnParticles(x, y) {
-    for (let i = 0; i < 8; i++) {
+  getArrowColor(arrow, isHinted) {
+    if (arrow.isError) {
+      return { fill: '#ef4444', border: '#7f1d1d', highlight: 'rgba(255, 255, 255, 0.70)' };
+    }
+    if (isHinted) {
+      const pulseVal = (Math.sin(this.hintPulse) + 1) / 2;
+      const fill = pulseVal > 0.5 ? '#10b981' : '#34d399';
+      return { fill, border: '#064e3b', highlight: 'rgba(255, 255, 255, 0.75)' };
+    }
+
+    if (this.theme.multiColor || this.theme.id === 'cream') {
+      let hash = 0;
+      const str = String(arrow.id || '');
+      for (let i = 0; i < str.length; i++) {
+        hash = (hash << 5) - hash + str.charCodeAt(i);
+        hash |= 0;
+      }
+      return ARROW_PALETTE[Math.abs(hash) % ARROW_PALETTE.length];
+    }
+
+    return {
+      fill: this.theme.headFill,
+      border: this.theme.arrowStroke === '#ffffff' ? '#1e293b' : (this.theme.id === 'slate' ? '#090d16' : '#141d28'),
+      highlight: 'rgba(255, 255, 255, 0.45)'
+    };
+  }
+
+  spawnParticles(x, y, color = null) {
+    const starColors = color ? [color, '#ffffff', '#ffd700'] : ['#ff4d5e', '#2eb5fa', '#27324c', '#ffd700', '#ffffff'];
+    // 4-pointed sparkle stars radiating outward (matches reference logo)
+    for (let i = 0; i < 6; i++) {
       const angle = Math.random() * Math.PI * 2;
-      const speed = 1 + Math.random() * 3;
+      const speed = 1.6 + Math.random() * 3.4;
       this.particles.push({
         x,
         y,
         vx: Math.cos(angle) * speed,
         vy: Math.sin(angle) * speed,
-        size: 2 + Math.random() * 3,
-        color: this.theme.accent,
+        size: 5 + Math.random() * 5,
+        color: starColors[Math.floor(Math.random() * starColors.length)],
         alpha: 1,
-        decay: 0.04 + Math.random() * 0.02
+        decay: 0.03 + Math.random() * 0.02,
+        isStar: true,
+        rotation: Math.random() * Math.PI * 2,
+        rotSpeed: (Math.random() - 0.5) * 0.25
       });
     }
+    // Sparkle dots (circular dots from reference logo)
+    for (let i = 0; i < 4; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 1 + Math.random() * 2.5;
+      this.particles.push({
+        x,
+        y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        size: 2.2 + Math.random() * 2,
+        color: this.theme.arrowStroke || '#1a1f2c',
+        alpha: 1,
+        decay: 0.035,
+        isDot: true
+      });
+    }
+  }
+
+  spawnDropletSplash(x, y) {
+    // Red liquid droplet splash on mistake / collision
+    for (let i = 0; i < 6; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 2 + Math.random() * 4;
+      this.particles.push({
+        x,
+        y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        gravity: 0.15,
+        size: 3 + Math.random() * 3,
+        color: '#ef4444',
+        alpha: 1,
+        decay: 0.04,
+        isDroplet: true
+      });
+    }
+  }
+
+  drawSparkleStar(ctx, x, y, size, color) {
+    ctx.save();
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    const rOuter = size;
+    const rInner = size * 0.24;
+    for (let i = 0; i < 8; i++) {
+      const r = i % 2 === 0 ? rOuter : rInner;
+      const angle = (i * Math.PI) / 4;
+      const px = x + Math.cos(angle) * r;
+      const py = y + Math.sin(angle) * r;
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
   }
 
   spawnVictoryConfetti() {
@@ -655,7 +768,7 @@ export class ArrowGame {
       p.x += p.vx;
       p.y += p.vy;
       if (p.gravity) p.vy += p.gravity;
-      if (p.isConfetti) p.rotation += p.rotSpeed;
+      if (p.rotation !== undefined && p.rotSpeed) p.rotation += p.rotSpeed;
       p.alpha -= p.decay;
       if (p.alpha <= 0) {
         this.particles.splice(i, 1);
@@ -722,7 +835,11 @@ export class ArrowGame {
       ctx.save();
       ctx.globalAlpha = Math.max(0, p.alpha);
       ctx.fillStyle = p.color;
-      if (p.isConfetti) {
+      if (p.isStar) {
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rotation);
+        this.drawSparkleStar(ctx, 0, 0, p.size, p.color);
+      } else if (p.isConfetti) {
         ctx.translate(p.x, p.y);
         ctx.rotate(p.rotation);
         ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
@@ -756,17 +873,7 @@ export class ArrowGame {
 
   drawArrow(ctx, arrow, isFlying = false) {
     const isHinted = this.hintArrowId === arrow.id;
-    let strokeColor = this.theme.arrowStroke;
-    let headColor = this.theme.headFill;
-
-    if (arrow.isError) {
-      strokeColor = '#ef4444';
-      headColor = '#ef4444';
-    } else if (isHinted) {
-      const pulseVal = (Math.sin(this.hintPulse) + 1) / 2;
-      strokeColor = pulseVal > 0.5 ? '#10b981' : '#34d399';
-      headColor = strokeColor;
-    }
+    const colorInfo = this.getArrowColor(arrow, isHinted);
 
     ctx.save();
 
@@ -779,51 +886,129 @@ export class ArrowGame {
     // Glow for hints
     if (isHinted) {
       ctx.shadowColor = '#10b981';
-      ctx.shadowBlur = 16;
+      ctx.shadowBlur = 18;
     }
 
-    ctx.strokeStyle = strokeColor;
-    ctx.lineWidth = this.lineWidth;
+    const tubeRadius = this.lineWidth;
+    const borderExtra = 6.5;
+
+    // 1. Outer Dark Tube Outline
+    ctx.strokeStyle = colorInfo.border;
+    ctx.lineWidth = tubeRadius + borderExtra;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
 
-    // Draw the body segments
     ctx.beginPath();
     arrow.points.forEach((p, idx) => {
       const px = p.x * this.cellSize;
       const py = p.y * this.cellSize;
-      if (idx === 0) {
-        ctx.moveTo(px, py);
-      } else {
-        ctx.lineTo(px, py);
-      }
+      if (idx === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
     });
     ctx.stroke();
 
-    // Draw the arrowhead at the tip
+    // 2. Inner Vibrant Tube Fill
+    ctx.strokeStyle = colorInfo.fill;
+    ctx.lineWidth = tubeRadius;
+    ctx.stroke();
+
+    // 3. Glossy 3D Highlight Reflection (White sheen along top/left edge)
+    ctx.save();
+    ctx.strokeStyle = colorInfo.highlight;
+    ctx.lineWidth = 3.2;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    for (let i = 0; i < arrow.points.length - 1; i++) {
+      const p1 = arrow.points[i];
+      const p2 = arrow.points[i + 1];
+      const x1 = p1.x * this.cellSize;
+      const y1 = p1.y * this.cellSize;
+      const x2 = p2.x * this.cellSize;
+      const y2 = p2.y * this.cellSize;
+
+      const isHorizontal = Math.abs(y1 - y2) < 1;
+      const isVertical = Math.abs(x1 - x2) < 1;
+
+      ctx.beginPath();
+      if (isHorizontal) {
+        const offset = -3.5;
+        const startX = Math.min(x1, x2) + 6;
+        const endX = Math.max(x1, x2) - 6;
+        if (endX > startX) {
+          ctx.moveTo(startX, y1 + offset);
+          ctx.lineTo(endX, y1 + offset);
+          ctx.stroke();
+        }
+      } else if (isVertical) {
+        const offset = -3.5;
+        const startY = Math.min(y1, y2) + 6;
+        const endY = Math.max(y1, y2) - 6;
+        if (endY > startY) {
+          ctx.moveTo(x1 + offset, startY);
+          ctx.lineTo(x1 + offset, endY);
+          ctx.stroke();
+        }
+      }
+    }
+
+    // Glossy pip at the tail cap
+    const tailP = arrow.points[0];
+    ctx.fillStyle = colorInfo.highlight;
+    ctx.beginPath();
+    ctx.arc(tailP.x * this.cellSize - 2, tailP.y * this.cellSize - 2, 2.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // 4. Arrowhead with outline, fill and facet shine
     const headP = arrow.points[arrow.points.length - 1];
     const prevP = arrow.points[arrow.points.length - 2] || headP;
     const angle = Math.atan2(headP.y - prevP.y, headP.x - prevP.x);
 
-    this.drawArrowHead(ctx, headP.x * this.cellSize, headP.y * this.cellSize, angle, headColor);
+    this.drawArrowHead(ctx, headP.x * this.cellSize, headP.y * this.cellSize, angle, colorInfo);
 
     ctx.restore();
   }
 
-  drawArrowHead(ctx, x, y, angle, color) {
+  drawArrowHead(ctx, x, y, angle, colorInfo) {
     ctx.save();
     ctx.translate(x, y);
     ctx.rotate(angle);
 
-    const headLength = 22;
-    const headWidth = 18;
+    const headLength = 26;
+    const headWidth = 24;
 
-    ctx.fillStyle = color;
+    // Outer Dark Border
+    ctx.fillStyle = colorInfo.border;
+    ctx.strokeStyle = colorInfo.border;
+    ctx.lineWidth = 4;
+    ctx.lineJoin = 'round';
+
     ctx.beginPath();
-    ctx.moveTo(headLength * 0.4, 0); // Tip
-    ctx.lineTo(-headLength * 0.6, -headWidth * 0.6); // Wing left
+    ctx.moveTo(headLength * 0.5, 0); // Tip
+    ctx.lineTo(-headLength * 0.5, -headWidth * 0.5); // Wing left
     ctx.lineTo(-headLength * 0.2, 0); // Base indent
-    ctx.lineTo(-headLength * 0.6, headWidth * 0.6); // Wing right
+    ctx.lineTo(-headLength * 0.5, headWidth * 0.5); // Wing right
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // Inner Color Fill
+    ctx.fillStyle = colorInfo.fill;
+    ctx.beginPath();
+    ctx.moveTo(headLength * 0.44, 0);
+    ctx.lineTo(-headLength * 0.44, -headWidth * 0.42);
+    ctx.lineTo(-headLength * 0.18, 0);
+    ctx.lineTo(-headLength * 0.44, headWidth * 0.42);
+    ctx.closePath();
+    ctx.fill();
+
+    // Glossy highlight reflection on the upper facet
+    ctx.fillStyle = colorInfo.highlight;
+    ctx.beginPath();
+    ctx.moveTo(headLength * 0.25, -2);
+    ctx.lineTo(-headLength * 0.35, -headWidth * 0.32);
+    ctx.lineTo(-headLength * 0.15, -4);
     ctx.closePath();
     ctx.fill();
 

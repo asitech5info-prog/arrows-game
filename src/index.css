@@ -3,10 +3,10 @@
   --font-display: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 
-  /* Dynamic Game Board Theme (default mint) */
-  --game-bg: #ddf3e4;
-  --game-text: #1b4332;
-  --game-accent: #10b981;
+  /* Dynamic Game Board Theme (default cream / logo theme) */
+  --game-bg: #fbf9f4;
+  --game-text: #1a1f2c;
+  --game-accent: #ff4d5e;
 
   /* App Theme Colors */
   --primary: #6366f1;
@@ -100,6 +100,15 @@ html, body {
 .splash-logo {
   margin-bottom: 24px;
   animation: logoFloat 2.8s ease-in-out infinite;
+}
+
+.splash-logo-img {
+  width: 128px;
+  height: 128px;
+  border-radius: 28px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.35);
+  object-fit: cover;
+  border: 3px solid rgba(255, 255, 255, 0.2);
 }
 
 @keyframes logoFloat {
@@ -348,15 +357,25 @@ html, body {
 .home-brand-logo {
   display: flex;
   align-items: center;
-  gap: 2px;
+  justify-content: center;
+  gap: 12px;
   margin-bottom: 6px;
+}
+
+.home-brand-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  object-fit: cover;
+  border: 2px solid rgba(255, 255, 255, 0.9);
 }
 
 .home-game-name {
   font-family: var(--font-display);
   font-size: 46px;
   font-weight: 900;
-  color: #312e81;
+  color: #1e1b4b;
   letter-spacing: -1px;
 }
 

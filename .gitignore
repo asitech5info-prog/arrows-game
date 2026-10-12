@@ -8,3 +8,7 @@ Thumbs.db
 build/
 android/.gradle/
 android/app/build/
+*.xapk
+*.apk
+scratch_apk/
+scratch/

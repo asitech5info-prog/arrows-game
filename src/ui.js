@@ -26,7 +26,7 @@ export class UIManager {
       streak: 1,
       lastPlayDate: new Date().toDateString(),
       completedDailyChallenges: {}, // key: "YYYY-MM-DD"
-      theme: 'mint',
+      theme: 'cream',
       sound: true,
       music: false,
       vibration: true,

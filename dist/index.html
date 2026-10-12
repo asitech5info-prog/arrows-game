@@ -5,17 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Arrows! - Arrow Maze Puzzle Game</title>
   <meta name="description" content="Arrows! - Untangle the interlocking arrows in 5,000 addictive maze puzzle levels!">
+  <link rel="icon" type="image/png" href="/favicon.png">
   <link rel="icon" type="image/svg+xml" href="/logo.svg">
+  <link rel="apple-touch-icon" href="/logo-192.png">
   <link rel="manifest" href="/manifest.json">
-  <meta name="theme-color" content="#10b981">
+  <meta name="theme-color" content="#ff4d5e">
 
   <!-- Google Fonts: Outfit for sleek rounded modern gaming UI, Inter for body -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap" rel="stylesheet">
 
-  <script type="module" crossorigin src="/assets/index-DQSaK5ab.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/index-DAbfJivo.css">
+  <script type="module" crossorigin src="/assets/index-BcsKRQrp.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-ChdBGJFp.css">
 </head>
 <body>
   <div id="app-container">
@@ -24,25 +26,7 @@
     <div id="splash-screen" class="screen-view splash-layout">
       <div class="splash-content">
         <div class="custom-logo splash-logo">
-          <svg viewBox="0 0 120 120" width="120" height="120" class="logo-svg">
-            <defs>
-              <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#4f46e5"/>
-                <stop offset="50%" stop-color="#7c3aed"/>
-                <stop offset="100%" stop-color="#ec4899"/>
-              </linearGradient>
-              <linearGradient id="arrowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#38bdf8"/>
-                <stop offset="100%" stop-color="#6366f1"/>
-              </linearGradient>
-            </defs>
-            <!-- Sleek Interlocking Geometric Arrows -->
-            <rect x="8" y="8" width="104" height="104" rx="28" fill="url(#logoGrad)" filter="drop-shadow(0 12px 24px rgba(99,102,241,0.4))"/>
-            <!-- Upward Arrow & Turn -->
-            <path d="M60 22 L86 52 L68 52 L68 84 L52 84 L52 52 L34 52 Z" fill="#ffffff"/>
-            <path d="M42 66 L28 78 L28 94 L88 94 L88 82" fill="none" stroke="url(#arrowGrad)" stroke-width="6" stroke-linecap="round"/>
-            <circle cx="60" cy="40" r="4" fill="#6366f1"/>
-          </svg>
+          <img src="/logo.png" alt="Arrows Logo" class="splash-logo-img" width="130" height="130">
         </div>
         <h1 class="splash-title">Arrows<span class="exclamation">!</span></h1>
         <p class="splash-subtitle">Untangle the Paths</p>
@@ -106,12 +90,8 @@
       <!-- Center Brand & Level Info -->
       <main class="home-hero-section">
         <div class="home-brand-logo">
-          <svg viewBox="0 0 100 80" width="84" height="66">
-            <!-- Distinct Upward Triangle Arrow "A" motif from Reference -->
-            <polygon points="50,6 88,72 68,72 50,42 32,72 12,72" fill="#312e81"/>
-            <polygon points="50,22 66,54 34,54" fill="#6366f1"/>
-          </svg>
-          <div class="home-game-name">rrows</div>
+          <img src="/logo.png" alt="Arrows Logo" class="home-brand-icon" width="68" height="68">
+          <div class="home-game-name">Arrows!</div>
         </div>
 
         <div class="home-level-info">
@@ -188,6 +168,7 @@
 
       <!-- Theme Picker Dropdown -->
       <div id="theme-picker-popup" class="theme-picker-popup hidden">
+        <div class="theme-choice" data-theme-choice="cream" style="background: #fbf9f4; border: 2px solid #ff4d5e;" title="Warm Cream (Logo)"></div>
         <div class="theme-choice" data-theme-choice="mint" style="background: #ddf3e4; border: 2px solid #1b4332;" title="Mint Green"></div>
         <div class="theme-choice" data-theme-choice="peach" style="background: #f7ebd9; border: 2px solid #582f14;" title="Warm Sand"></div>
         <div class="theme-choice" data-theme-choice="slate" style="background: #1e2030; border: 2px solid #c7d2fe;" title="Midnight Slate"></div>
