@@ -4,20 +4,20 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Arrows! - Arrow Maze Puzzle Game</title>
-  <meta name="description" content="Arrows! - Untangle the interlocking arrows in 5,000 addictive maze puzzle levels!">
+  <meta name="description" content="Arrows! - Untangle the interlocking arrows in addictive maze puzzle levels!">
   <link rel="icon" type="image/png" href="/favicon.png">
   <link rel="icon" type="image/svg+xml" href="/logo.svg">
   <link rel="apple-touch-icon" href="/logo-192.png">
   <link rel="manifest" href="/manifest.json">
-  <meta name="theme-color" content="#ff4d5e">
+  <meta name="theme-color" content="#4338ca">
 
-  <!-- Google Fonts: Outfit for sleek rounded modern gaming UI, Inter for body -->
+  <!-- Google Fonts: Outfit for sleek rounded modern gaming UI, Plus Jakarta Sans for body -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
 
-  <script type="module" crossorigin src="/assets/index-BcsKRQrp.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/index-ChdBGJFp.css">
+  <script type="module" crossorigin src="/assets/index-D9VwHHin.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-B8VuBhTf.css">
 </head>
 <body>
   <div id="app-container">
@@ -42,68 +42,34 @@
     </div>
 
     <!-- 2. HOME SCREEN -->
+    <!-- Requirement: Remove logo, remove streak counter, remove challenge from top, remove jump button -->
     <div id="home-screen" class="screen-view home-layout hidden">
-      <!-- Top Bar: Profile & Streak -->
+      <!-- Top Bar: Profile Pill with Custom & 30 PFPs (Streak counter removed) -->
       <header class="home-top-bar">
-        <div class="avatar-pill">
-          <div class="avatar-icon">
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="#64748b">
-              <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-            </svg>
+        <div id="home-profile-pill" class="avatar-pill" title="Edit Profile & Avatar">
+          <div id="home-avatar-icon" class="avatar-icon">
+            <span style="font-size: 18px;">🦊</span>
           </div>
-          <span class="player-name">Player</span>
-        </div>
-
-        <div id="home-streak-badge" class="streak-pill" title="Click to view streak">
-          <span class="fire-icon">🔥</span>
-          <span id="streak-count-val" class="streak-val">1</span>
+          <span id="home-player-name" class="player-name">Player</span>
+          <span class="avatar-edit-hint">✎</span>
         </div>
       </header>
 
-      <!-- Challenge Card: Unlocked at Level 20 -->
-      <section class="home-daily-section">
-        <div id="home-daily-card" class="daily-card">
-          <div class="daily-trophy-preview">
-            <svg viewBox="0 0 80 80" width="56" height="56">
-              <path d="M20 20 L60 20 L52 50 C52 60 44 64 40 64 C36 64 28 60 28 50 Z" fill="#c7d2fe" stroke="#818cf8" stroke-width="2"/>
-              <path d="M20 26 C12 26 12 42 20 42" fill="none" stroke="#818cf8" stroke-width="3" stroke-linecap="round"/>
-              <path d="M60 26 C68 26 68 42 60 42" fill="none" stroke="#818cf8" stroke-width="3" stroke-linecap="round"/>
-              <rect x="35" y="64" width="10" height="10" fill="#a5b4fc"/>
-              <rect x="28" y="74" width="24" height="4" rx="2" fill="#818cf8"/>
-            </svg>
-          </div>
-          <div class="daily-card-info">
-            <div class="daily-title">Challenge</div>
-            <div class="daily-date">October 11</div>
-          </div>
-          <button id="home-daily-play-btn" class="daily-card-btn">Play</button>
-
-          <!-- Lock Overlay if level < 20 -->
-          <div id="home-daily-lock-overlay" class="card-lock-overlay">
-            <span class="lock-icon">🔒</span>
-            <div class="lock-text">Unlocks at Level 20</div>
-            <div class="lock-hint">Reach level 20 to play daily trophies!</div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Center Brand & Level Info -->
+      <!-- Center Hero: Clean typography, level display (one-by-one, no jump), and big Play button -->
       <main class="home-hero-section">
-        <div class="home-brand-logo">
-          <img src="/logo.png" alt="Arrows Logo" class="home-brand-icon" width="68" height="68">
-          <div class="home-game-name">Arrows!</div>
+        <div class="home-hero-text-wrap">
+          <h1 class="home-title-clean">Arrows<span class="exclamation">!</span></h1>
         </div>
 
         <div class="home-level-info">
           <div class="level-row">
             <span id="home-level-number" class="level-big">Level 1</span>
-            <button id="level-jump-btn" class="level-select-pill" title="Jump to any level 1-5000">Jump ▾</button>
           </div>
-          <div id="home-difficulty-badge" class="difficulty-pill normal">Normal</div>
+          <div id="home-difficulty-badge" class="difficulty-pill normal" data-i18n="normal">Normal</div>
         </div>
 
         <!-- Big Play Button -->
-        <button id="home-play-btn" class="btn-primary-play">Play</button>
+        <button id="home-play-btn" class="btn-primary-play" data-i18n="play">Play</button>
       </main>
 
     </div>
@@ -142,17 +108,16 @@
         </button>
       </header>
 
-      <!-- Game Sub-bar: RED DROPLETS & Hint -->
+      <!-- Game Sub-bar: 3 RED DROPLETS & Hint -->
       <div class="game-sub-bar">
-        <!-- Exact user requirement: "and the droplets in game red which are blue in photos" -->
         <div id="game-droplets-container" class="droplets-cluster" title="3 Lives / Red Droplets">
-          <!-- Populated by JS with red droplets -->
+          <!-- Rendered dynamically with 3 red droplets -->
         </div>
 
         <div id="in-game-timer" class="game-timer">00:00</div>
 
         <button id="game-hint-btn" class="hint-pill-btn">
-          <span class="hint-bulb">💡</span> Hint
+          <span class="hint-bulb">💡</span> <span data-i18n="hint">Hint</span>
         </button>
       </div>
 
@@ -160,21 +125,11 @@
       <div class="canvas-viewport">
         <canvas id="game-canvas"></canvas>
 
-        <!-- "Pinch to zoom" guidance popup on hard levels -->
         <div id="zoom-notice-toast" class="zoom-notice-toast hidden">
-          <span>Pinch to zoom / Drag to pan</span>
+          <span data-i18n="pinchToZoom">Pinch to zoom / Drag to pan</span>
         </div>
       </div>
 
-      <!-- Theme Picker Dropdown -->
-      <div id="theme-picker-popup" class="theme-picker-popup hidden">
-        <div class="theme-choice" data-theme-choice="cream" style="background: #fbf9f4; border: 2px solid #ff4d5e;" title="Warm Cream (Logo)"></div>
-        <div class="theme-choice" data-theme-choice="mint" style="background: #ddf3e4; border: 2px solid #1b4332;" title="Mint Green"></div>
-        <div class="theme-choice" data-theme-choice="peach" style="background: #f7ebd9; border: 2px solid #582f14;" title="Warm Sand"></div>
-        <div class="theme-choice" data-theme-choice="slate" style="background: #1e2030; border: 2px solid #c7d2fe;" title="Midnight Slate"></div>
-        <div class="theme-choice" data-theme-choice="sky" style="background: #e0f2fe; border: 2px solid #0369a1;" title="Sky Blue"></div>
-        <div class="theme-choice" data-theme-choice="white" style="background: #ffffff; border: 2px solid #18181b;" title="Pure White"></div>
-      </div>
     </div>
 
     <!-- 4. CHALLENGE SCREEN: Unlocks at Level 20 -->
@@ -191,7 +146,6 @@
           </svg>
         </div>
 
-        <!-- Trophy Monthly Progress Bar -->
         <div class="challenge-progress-bar-wrap">
           <span class="progress-num current"><span id="challenge-dot-count">0</span></span>
           <div class="trophy-track">
@@ -203,7 +157,6 @@
         <h2 class="challenge-month-title">October 2026</h2>
       </header>
 
-      <!-- Calendar Grid (Mo - Su) -->
       <section class="calendar-section">
         <div class="calendar-weekdays">
           <span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span>
@@ -214,43 +167,41 @@
       </section>
 
       <footer class="challenge-footer">
-        <div id="challenge-selected-day-text" class="challenge-day-label">Day 11 Challenge</div>
-        <button id="challenge-play-btn" class="btn-primary-play challenge-play-btn">Play</button>
+        <div id="challenge-selected-day-text" class="challenge-day-label">Day Challenge</div>
+        <button id="challenge-play-btn" class="btn-primary-play challenge-play-btn" data-i18n="play">Play</button>
       </footer>
     </div>
 
     <!-- 5. COLLECTION SCREEN: Unlocks at Level 8 -->
     <div id="collection-screen" class="screen-view collection-layout hidden">
       <header class="collection-header">
-        <h2>Collection</h2>
+        <h2 data-i18n="collection">Collection</h2>
       </header>
 
       <div class="collection-scroll-content">
-        <!-- Records Section -->
         <section class="collection-block">
-          <h3 class="section-title">Records</h3>
+          <h3 class="section-title" data-i18n="records">Records</h3>
           <div class="records-grid">
             <div class="record-card">
               <div class="record-badge flame">🔥 <span id="record-longest-streak">1</span></div>
-              <div class="record-name">Longest Streak</div>
-              <div class="record-date">Oct 11 2026</div>
+              <div class="record-name" data-i18n="longestStreak">Longest Streak</div>
+              <div class="record-date">Oct 2026</div>
             </div>
             <div class="record-card">
               <div class="record-badge crown">👑 <span id="record-highest-win">10</span></div>
-              <div class="record-name">Highest Win Streak</div>
-              <div class="record-date">Oct 11 2026</div>
+              <div class="record-name" data-i18n="highestWin">Highest Win Streak</div>
+              <div class="record-date">Oct 2026</div>
             </div>
             <div class="record-card">
               <div class="record-badge wings">🏹 <span id="record-most-wins">19</span></div>
-              <div class="record-name">Most Wins</div>
-              <div class="record-date">Oct 11 2026</div>
+              <div class="record-name" data-i18n="mostWins">Most Wins</div>
+              <div class="record-date">Oct 2026</div>
             </div>
           </div>
         </section>
 
-        <!-- Awards Section -->
         <section class="collection-block">
-          <h3 class="section-title">Awards</h3>
+          <h3 class="section-title" data-i18n="awards">Awards</h3>
           <div class="awards-grid">
             <div class="award-item">
               <div class="award-icon unlocked">⭐</div>
@@ -280,39 +231,52 @@
           </div>
         </section>
 
-        <!-- Challenge Trophies Section -->
         <section class="collection-block">
           <div class="trophies-header-row">
-            <h3 class="section-title">Challenge Trophies</h3>
+            <h3 class="section-title" data-i18n="trophies">Challenge Trophies</h3>
             <span class="year-badge">2026</span>
           </div>
-          <div id="collection-trophies-container" class="trophies-grid">
-            <!-- 12 months dynamically rendered -->
-          </div>
+          <div id="collection-trophies-container" class="trophies-grid"></div>
         </section>
       </div>
     </div>
 
-    <!-- 6. SETTINGS SCREEN: Pure White Background, Black Text, No Save Progress -->
-    <!-- Explicit user instruction: "settings also don't add save ur progress make the back ground white and text colour black" -->
-    <div id="settings-screen" class="screen-view settings-layout hidden" style="background-color: #ffffff; color: #000000;">
+    <!-- 6. SETTINGS SCREEN: Pure White or Dark Mode, Monochrome Vector SVGs -->
+    <!-- Explicit requirements:
+         - Sound icon white/black according to theme
+         - Vibration/Haptic icon white/black according to theme
+         - Music icon plain white/black according to theme
+         - Remove Voice, Add Dark Theme toggle instead with white/black icon
+         - Star icon instead of Rate Us (white/black)
+         - Pencil icon instead of Feedback (white/black)
+         - Docs sign instead of Privacy Policy (white/black)
+         - i logo instead of Terms of Service (white/black)
+         - Language Changer supporting dozens of languages
+         - NO "Save your progress"
+    -->
+    <div id="settings-screen" class="screen-view settings-layout hidden">
       <header class="settings-header">
-        <button data-nav="home" class="icon-btn back-btn" style="color: #000000;">
+        <button data-nav="home" class="icon-btn back-btn">
           <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
             <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
           </svg>
         </button>
-        <h2 style="color: #000000;">Settings</h2>
+        <h2 data-i18n="settings">Settings</h2>
         <div style="width: 24px;"></div>
       </header>
 
       <div class="settings-scroll-content">
-        <!-- Audio & Gameplay Toggles Card -->
+        <!-- Audio & Preferences Card -->
         <div class="settings-card white-card">
+          <!-- 1. Sound (Speaker SVG, monochrome) -->
           <div class="setting-item">
             <div class="setting-left">
-              <span class="setting-icon">🔊</span>
-              <span class="setting-label">Sound</span>
+              <span class="setting-svg-icon">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+                  <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+                </svg>
+              </span>
+              <span class="setting-label" data-i18n="sound">Sound</span>
             </div>
             <label class="switch">
               <input type="checkbox" id="setting-sound" checked>
@@ -320,10 +284,15 @@
             </label>
           </div>
 
+          <!-- 2. Haptic / Vibration (Monochrome phone vibration SVG) -->
           <div class="setting-item">
             <div class="setting-left">
-              <span class="setting-icon">📳</span>
-              <span class="setting-label">Vibration</span>
+              <span class="setting-svg-icon">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+                  <path d="M0 15h2V9H0v6zm3 2h2V7H3v10zm19-8v6h2V9h-2zm-3 8h2V7h-2v10zM16.5 3h-9C6.67 3 6 3.67 6 4.5v15c0 .83.67 1.5 1.5 1.5h9c.83 0 1.5-.67 1.5-1.5v-15c0-.83-.67-1.5-1.5-1.5zM16 19H8V5h8v14z"/>
+                </svg>
+              </span>
+              <span class="setting-label" data-i18n="haptic">Haptic</span>
             </div>
             <label class="switch">
               <input type="checkbox" id="setting-vibration" checked>
@@ -331,10 +300,15 @@
             </label>
           </div>
 
+          <!-- 3. Music (Monochrome musical note SVG) -->
           <div class="setting-item">
             <div class="setting-left">
-              <span class="setting-icon">🎵</span>
-              <span class="setting-label">Music</span>
+              <span class="setting-svg-icon">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+                  <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+                </svg>
+              </span>
+              <span class="setting-label" data-i18n="music">Music</span>
             </div>
             <label class="switch">
               <input type="checkbox" id="setting-music">
@@ -342,21 +316,31 @@
             </label>
           </div>
 
+          <!-- 4. Dark Theme Toggle (Monochrome moon SVG, replacing voice) -->
           <div class="setting-item">
             <div class="setting-left">
-              <span class="setting-icon">🗣️</span>
-              <span class="setting-label">Voice</span>
+              <span class="setting-svg-icon">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+                  <path d="M12.3 2a10 10 0 0 0-.19 14 10 10 0 0 0 11.8 1.95 1 1 0 0 0 .34-1.4 1 1 0 0 0-1.15-.43 8 8 0 0 1-10.23-10.23 1 1 0 0 0-.43-1.15A1 1 0 0 0 12.3 2z"/>
+                </svg>
+              </span>
+              <span class="setting-label" data-i18n="darkTheme">Dark Theme</span>
             </div>
             <label class="switch">
-              <input type="checkbox" id="setting-voice" checked>
+              <input type="checkbox" id="setting-dark-theme">
               <span class="slider round"></span>
             </label>
           </div>
 
+          <!-- 5. Guideline Grid Toggle -->
           <div class="setting-item">
             <div class="setting-left">
-              <span class="setting-icon">▦</span>
-              <span class="setting-label">Guideline</span>
+              <span class="setting-svg-icon">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+                  <path d="M20 2H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM8 20H4v-4h4v4zm0-6H4v-4h4v4zm0-6H4V4h4v4zm6 12h-4v-4h4v4zm0-6h-4v-4h4v4zm0-6h-4V4h4v4zm6 12h-4v-4h4v4zm0-6h-4v-4h4v4zm0-6h-4V4h4v4z"/>
+                </svg>
+              </span>
+              <span class="setting-label" data-i18n="guideline">Guideline</span>
             </div>
             <label class="switch">
               <input type="checkbox" id="setting-guideline" checked>
@@ -365,65 +349,119 @@
           </div>
         </div>
 
-        <!-- Links Card: Rate Us, Feedback -->
+        <!-- Language Selector Card -->
+        <div class="settings-card white-card">
+          <button id="settings-language-btn" class="settings-nav-row">
+            <div class="setting-left">
+              <span class="setting-svg-icon">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+                  <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm6.93 6h-2.95a15.65 15.65 0 0 0-1.38-3.56A8.03 8.03 0 0 1 18.92 8zM12 4.04c.83 1.2 1.48 2.53 1.91 3.96h-3.82c.43-1.43 1.08-2.76 1.91-3.96zM4.26 14C4.1 13.36 4 12.69 4 12s.1-1.36.26-2h3.38c-.08.66-.14 1.32-.14 2 0 .68.06 1.34.14 2H4.26zm.82 2h2.95c.32 1.25.78 2.45 1.38 3.56A7.987 7.987 0 0 1 5.08 16zm2.95-8H5.08a7.987 7.987 0 0 1 3.95-3.56A15.65 15.65 0 0 0 8.03 8zM12 19.96c-.83-1.2-1.48-2.53-1.91-3.96h3.82c-.43 1.43-1.08 2.76-1.91 3.96zM14.34 14H9.66c-.09-.66-.16-1.32-.16-2 0-.68.07-1.35.16-2h4.68c.09.65.16 1.32.16 2 0 .68-.07 1.34-.16 2zm.77 5.56c.6-1.11 1.06-2.31 1.38-3.56h2.95a8.03 8.03 0 0 1-4.33 3.56zM16.36 14c.08-.66.14-1.32.14-2 0-.68-.06-1.34-.14-2h3.38c.16.64.26 1.31.26 2s-.1 1.36-.26 2h-3.38z"/>
+                </svg>
+              </span>
+              <span class="setting-label" data-i18n="language">Language</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <span id="settings-current-lang-name" style="font-size:14px;font-weight:700;color:#64748b;">English</span>
+              <span class="chevron">›</span>
+            </div>
+          </button>
+        </div>
+
+        <!-- Links Card: Rate Us (Monochrome Star) & Feedback (Monochrome Pencil) -->
         <div class="settings-card white-card">
           <button id="settings-rate-us-btn" class="settings-nav-row">
             <div class="setting-left">
-              <span class="setting-icon">👍</span>
-              <span class="setting-label">Rate Us</span>
+              <span class="setting-svg-icon">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+                  <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                </svg>
+              </span>
+              <span class="setting-label" data-i18n="rateUs">Rate Us</span>
             </div>
             <span class="chevron">›</span>
           </button>
 
           <button id="settings-feedback-btn" class="settings-nav-row">
             <div class="setting-left">
-              <span class="setting-icon">💬</span>
-              <span class="setting-label">Feedback</span>
+              <span class="setting-svg-icon">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+                  <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                </svg>
+              </span>
+              <span class="setting-label" data-i18n="feedback">Feedback</span>
             </div>
             <span class="chevron">›</span>
           </button>
         </div>
 
-        <!-- Legal Card: Privacy, Terms -->
+        <!-- Legal Card: Privacy (Docs text sign) & Terms (i logo in circle) -->
         <div class="settings-card white-card">
           <button id="settings-privacy-btn" class="settings-nav-row">
             <div class="setting-left">
-              <span class="setting-icon">📖</span>
-              <span class="setting-label">Privacy Policy</span>
+              <span class="setting-svg-icon">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+                  <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
+                </svg>
+              </span>
+              <span class="setting-label" data-i18n="privacyPolicy">Privacy Policy</span>
             </div>
             <span class="chevron">›</span>
           </button>
 
           <button id="settings-terms-btn" class="settings-nav-row">
             <div class="setting-left">
-              <span class="setting-icon">📄</span>
-              <span class="setting-label">Terms of Service</span>
+              <span class="setting-svg-icon">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+                </svg>
+              </span>
+              <span class="setting-label" data-i18n="termsOfService">Terms of Service</span>
             </div>
             <span class="chevron">›</span>
           </button>
         </div>
 
-        <div class="app-version-footer" style="color: #64748b; text-align: center; margin-top: 24px; font-size: 13px;">
+        <div class="app-version-footer" data-i18n="version">
           Arrows! Version 1.0.0
         </div>
       </div>
     </div>
 
+    <!-- Global Theme Picker Floating Popup -->
+    <div id="theme-picker-popup" class="theme-picker-popup hidden">
+      <div class="theme-choice" data-theme-choice="cream" style="background: #fbf9f4; border: 2px solid #ff4d5e;" title="Warm Cream"></div>
+      <div class="theme-choice" data-theme-choice="mint" style="background: #ddf3e4; border: 2px solid #1b4332;" title="Mint Garden"></div>
+      <div class="theme-choice" data-theme-choice="peach" style="background: #f7ebd9; border: 2px solid #582f14;" title="Warm Sand"></div>
+      <div class="theme-choice" data-theme-choice="slate" style="background: #0f172a; border: 2px solid #38bdf8;" title="Dark Mode"></div>
+      <div class="theme-choice" data-theme-choice="sky" style="background: #e0f2fe; border: 2px solid #0369a1;" title="Sky Blue"></div>
+      <div class="theme-choice" data-theme-choice="white" style="background: #ffffff; border: 2px solid #18181b;" title="Pure Minimal"></div>
+    </div>
+
     <!-- FIXED BOTTOM NAVIGATION BAR -->
+    <!-- Requirement:
+         - Theme button placed next to settings button
+         - Challenge button lock and collection lock look like the reference photo
+    -->
     <nav id="bottom-navigation" class="bottom-nav-bar">
       <button class="bottom-nav-item active" data-nav="home">
         <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
           <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
         </svg>
-        <span>Home</span>
+        <span data-i18n="home">Home</span>
       </button>
 
       <button class="bottom-nav-item" data-nav="challenge">
-        <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
-          <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z"/>
-        </svg>
-        <span>Challenge</span>
-        <span id="nav-challenge-lock" class="nav-lock-badge">🔒</span>
+        <div class="nav-icon-badge-wrap">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+            <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z"/>
+          </svg>
+          <span id="nav-challenge-lock" class="nav-lock-badge">
+            <svg viewBox="0 0 24 24" width="11" height="11" fill="#eab308">
+              <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
+            </svg>
+          </span>
+        </div>
+        <span data-i18n="challenge">Challenge</span>
       </button>
 
       <button class="bottom-nav-item" data-nav="collection">
@@ -432,63 +470,68 @@
             <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
           </svg>
           <span class="badge-dot"></span>
+          <span id="nav-collection-lock" class="nav-lock-badge">
+            <svg viewBox="0 0 24 24" width="11" height="11" fill="#eab308">
+              <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
+            </svg>
+          </span>
         </div>
-        <span>Collection</span>
-        <span id="nav-collection-lock" class="nav-lock-badge">🔒</span>
+        <span data-i18n="collection">Collection</span>
+      </button>
+
+      <!-- Theme Button directly next to Settings Button -->
+      <button id="nav-theme-btn" class="bottom-nav-item" title="Switch Theme">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+          <path d="M12 3c-4.97 0-9 4.03-9 9 0 2.12.74 4.07 1.97 5.61L4.35 19c-.39.39-.39 1.02 0 1.41.39.39 1.02.39 1.41 0l1.9-1.9C9.23 19.49 10.57 20 12 20c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-5.5 9c-.83 0-1.5-.67-1.5-1.5S5.67 9 6.5 9 8 9.67 8 10.5 7.33 12 6.5 12zm3-4C8.67 8 8 7.33 8 6.5S8.67 5 9.5 5s1.5.67 1.5 1.5S10.33 8 9.5 8zm5 0c-.83 0-1.5-.67-1.5-1.5S13.67 5 14.5 5s1.5.67 1.5 1.5S15.33 8 14.5 8zm3 4c-.83 0-1.5-.67-1.5-1.5S16.67 9 17.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
+        </svg>
+        <span data-i18n="theme">Theme</span>
       </button>
 
       <button class="bottom-nav-item" data-nav="settings">
         <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
           <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
         </svg>
-        <span>Settings</span>
+        <span data-i18n="settings">Settings</span>
       </button>
     </nav>
 
     <!-- ==================== MODALS ==================== -->
 
-    <!-- In-Game Settings Modal (White bg, Black text, audio toggles, Restart) -->
+    <!-- In-Game Settings Modal -->
     <div id="in-game-settings-modal" class="modal-backdrop hidden">
-      <div class="modal-box white-modal" style="background: #ffffff; color: #000000;">
+      <div class="modal-box white-modal">
         <div class="modal-header">
-          <h3 style="color: #000000;">Settings</h3>
-          <button data-close-modal="in-game-settings-modal" class="modal-close-btn" style="color: #000000;">✕</button>
+          <h3 data-i18n="settings">Settings</h3>
+          <button data-close-modal="in-game-settings-modal" class="modal-close-btn">✕</button>
         </div>
         <div class="settings-card white-card" style="box-shadow: none; border: 1px solid #e2e8f0;">
           <div class="setting-item">
-            <span class="setting-label" style="color: #000000;">🔊 Sound</span>
+            <span class="setting-label" data-i18n="sound">Sound</span>
             <label class="switch">
               <input type="checkbox" id="ig-setting-sound" checked>
               <span class="slider round"></span>
             </label>
           </div>
           <div class="setting-item">
-            <span class="setting-label" style="color: #000000;">📳 Vibration</span>
+            <span class="setting-label" data-i18n="haptic">Haptic</span>
             <label class="switch">
               <input type="checkbox" id="ig-setting-vibration" checked>
               <span class="slider round"></span>
             </label>
           </div>
           <div class="setting-item">
-            <span class="setting-label" style="color: #000000;">🎵 Music</span>
+            <span class="setting-label" data-i18n="music">Music</span>
             <label class="switch">
               <input type="checkbox" id="ig-setting-music">
               <span class="slider round"></span>
             </label>
           </div>
-          <div class="setting-item">
-            <span class="setting-label" style="color: #000000;">🗣️ Voice</span>
-            <label class="switch">
-              <input type="checkbox" id="ig-setting-voice" checked>
-              <span class="slider round"></span>
-            </label>
-          </div>
         </div>
-        <button id="ig-restart-btn" class="btn-secondary-action restart-btn" style="background: #ea580c; color: #ffffff; font-weight: 700; border-radius: 16px; padding: 14px; width: 100%; border: none; font-size: 16px; margin-top: 16px;">Restart</button>
+        <button id="ig-restart-btn" class="btn-primary-play restart-btn" style="background: #ea580c; width: 100%; margin-top: 16px;" data-i18n="restart">Restart</button>
       </div>
     </div>
 
-    <!-- Victory Modal (3 stars, stats, progression track, Next Level) -->
+    <!-- Victory Modal -->
     <div id="victory-modal" class="modal-backdrop hidden">
       <div class="modal-box victory-card">
         <div class="victory-stars-cluster">
@@ -497,23 +540,23 @@
           <span class="star-pop star-right">⭐</span>
         </div>
 
-        <h3 id="victory-title" class="victory-headline">Flawless!</h3>
+        <h3 id="victory-title" class="victory-headline" data-i18n="flawless">Flawless!</h3>
 
         <div class="victory-stats-box">
           <div class="stat-row">
-            <span>Difficulty</span>
+            <span data-i18n="difficulty">Difficulty</span>
             <span id="victory-difficulty" class="stat-value">Normal</span>
           </div>
           <div class="stat-row">
-            <span>Time</span>
+            <span data-i18n="time">Time</span>
             <span id="victory-time" class="stat-value">00:08</span>
           </div>
           <div class="stat-row">
-            <span>Score</span>
+            <span data-i18n="score">Score</span>
             <span id="victory-score" class="stat-value highlight">1500</span>
           </div>
           <div class="stat-row">
-            <span>Today's Levels</span>
+            <span data-i18n="todaysLevels">Today's Levels</span>
             <span id="victory-today-levels" class="stat-value">1</span>
           </div>
           <hr class="stat-divider">
@@ -524,33 +567,89 @@
           </div>
         </div>
 
-        <div id="victory-level-track" class="level-track-row">
-          <!-- Dots rendered by JS -->
-        </div>
+        <div id="victory-level-track" class="level-track-row"></div>
 
-        <button id="victory-next-btn" class="btn-primary-play">Next Level</button>
-        <button id="victory-home-btn" class="btn-secondary-flat">Home</button>
+        <button id="victory-next-btn" class="btn-primary-play" data-i18n="nextLevel">Next Level</button>
+        <button id="victory-home-btn" class="btn-secondary-flat" data-i18n="home">Home</button>
       </div>
     </div>
 
-    <!-- Game Over Modal (Droplets Depleted) -->
+    <!-- "Out of Moves!" Modal (Page that appears after losing all lives) -->
+    <!-- Matches reference photo 2:
+         - Blue droplet icon top-left
+         - "Out of Moves!"
+         - "You used all 3 red droplets on blocked arrows."
+         - Green "Revive (+2 Lives)" button
+         - Orange "Retry Level" button
+         - Centered text link "Home"
+    -->
     <div id="gameover-modal" class="modal-backdrop hidden">
-      <div class="modal-box gameover-card">
-        <div class="gameover-icon">💧</div>
-        <h3>Out of Moves!</h3>
-        <p>You used all 3 red droplets on blocked arrows.</p>
-        <button id="gameover-revive-btn" class="btn-primary-play" style="background: #10b981;">Revive (+2 Lives)</button>
-        <button id="gameover-retry-btn" class="btn-primary-play" style="background: #f97316; margin-top: 10px;">Retry Level</button>
-        <button id="gameover-home-btn" class="btn-secondary-flat">Home</button>
+      <div class="modal-box gameover-card-ref">
+        <div class="gameover-top-icon">
+          <svg viewBox="0 0 24 24" width="36" height="36" fill="#38bdf8">
+            <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+          </svg>
+        </div>
+        <h3 class="gameover-title" data-i18n="outOfMoves">Out of Moves!</h3>
+        <p class="gameover-subtitle" data-i18n="outOfMovesDesc">You used all 3 red droplets on blocked arrows.</p>
+        
+        <button id="gameover-revive-btn" class="btn-gameover-revive" data-i18n="revive">Revive (+2 Lives)</button>
+        <button id="gameover-retry-btn" class="btn-gameover-retry" data-i18n="retryLevel">Retry Level</button>
+        <button id="gameover-home-btn" class="btn-gameover-home" data-i18n="home">Home</button>
+      </div>
+    </div>
+
+    <!-- Profile & Avatar Customization Modal (30 PFPs + Custom Photo Upload) -->
+    <div id="profile-modal" class="modal-backdrop hidden">
+      <div class="modal-box profile-card">
+        <div class="modal-header">
+          <h3 data-i18n="editProfile">Edit Profile</h3>
+          <button data-close-modal="profile-modal" class="modal-close-btn">✕</button>
+        </div>
+
+        <div class="profile-avatar-hero-wrap">
+          <div id="profile-modal-avatar-preview" class="profile-hero-avatar">
+            <span style="font-size: 36px;">🦊</span>
+          </div>
+          <button id="profile-upload-trigger-btn" class="btn-upload-photo" data-i18n="uploadCustomPhoto">Upload Custom Photo</button>
+          <input type="file" id="profile-photo-file-input" accept="image/*" style="display: none;">
+        </div>
+
+        <div class="profile-input-group">
+          <label class="profile-input-label" data-i18n="playerName">Player Name</label>
+          <input type="text" id="profile-name-input" class="profile-name-field" maxlength="16" value="Player">
+        </div>
+
+        <div class="pfp-grid-label" data-i18n="chooseAvatar">Choose Avatar (30 In-Game)</div>
+        <div id="pfp-grid-container" class="pfp-picker-grid">
+          <!-- Populated by JS with 30 avatars -->
+        </div>
+
+        <div class="modal-actions-row">
+          <button id="profile-save-btn" class="btn-primary-play" style="padding: 12px 20px; font-size: 16px;" data-i18n="save">Save</button>
+          <button data-close-modal="profile-modal" class="btn-secondary-flat" data-i18n="cancel">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Language Selector Modal (18 Languages) -->
+    <div id="language-modal" class="modal-backdrop hidden">
+      <div class="modal-box language-card">
+        <div class="modal-header">
+          <h3 data-i18n="selectLanguage">Select Language</h3>
+          <button data-close-modal="language-modal" class="modal-close-btn">✕</button>
+        </div>
+        <div id="language-list-container" class="language-scroll-list">
+          <!-- Populated with 18 languages by JS -->
+        </div>
       </div>
     </div>
 
     <!-- Daily Challenge 2-Slide Tutorial Carousel Modal -->
     <div id="daily-challenge-info-modal" class="modal-backdrop hidden">
       <div class="modal-box daily-info-card">
-        <h3>Daily Challenge</h3>
+        <h3 data-i18n="challenge">Daily Challenge</h3>
 
-        <!-- Slide 1: Green Dots -->
         <div id="daily-slide-1" class="daily-slide">
           <div class="slide-art green-dots-art">
             <span class="dot-big d1"></span>
@@ -559,11 +658,8 @@
           <p class="slide-desc">Beat daily challenges to collect green dots!</p>
         </div>
 
-        <!-- Slide 2: Golden Trophy -->
         <div id="daily-slide-2" class="daily-slide hidden">
-          <div class="slide-art gold-trophy-art">
-            🏆
-          </div>
+          <div class="slide-art gold-trophy-art">🏆</div>
           <p class="slide-desc">Collect green dots from all days in the month to win a unique trophy!</p>
         </div>
 
@@ -576,44 +672,11 @@
       </div>
     </div>
 
-    <!-- Streak Modal -->
-    <div id="streak-modal" class="modal-backdrop hidden">
-      <div class="modal-box streak-card">
-        <div class="streak-flame-hero">🔥</div>
-        <h3>1 day streak</h3>
-        <div class="streak-week-row">
-          <span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span class="active-day">Su ✓</span>
-        </div>
-        <button data-close-modal="streak-modal" class="btn-secondary-flat" style="margin-top: 24px;">Close</button>
-      </div>
-    </div>
-
-    <!-- Jump to Any Level Modal (1 to 5000) -->
-    <div id="level-select-modal" class="modal-backdrop hidden">
-      <div class="modal-box level-select-card">
-        <h3>Select Level</h3>
-        <p>Choose any level from 1 to 5,000</p>
-        <div class="level-input-row">
-          <input type="number" id="level-select-input" min="1" max="5000" value="1">
-        </div>
-        <div class="quick-jump-presets">
-          <button onclick="document.getElementById('level-select-input').value = 5">5 (Glasses)</button>
-          <button onclick="document.getElementById('level-select-input').value = 8">8 (Collection)</button>
-          <button onclick="document.getElementById('level-select-input').value = 10">10 (Heart)</button>
-          <button onclick="document.getElementById('level-select-input').value = 15">15 (Star)</button>
-          <button onclick="document.getElementById('level-select-input').value = 20">20 (Watch)</button>
-          <button onclick="document.getElementById('level-select-input').value = 5000">5000</button>
-        </div>
-        <button id="level-select-confirm-btn" class="btn-primary-play" style="margin-top: 16px;">Play Selected Level</button>
-        <button data-close-modal="level-select-modal" class="btn-secondary-flat">Cancel</button>
-      </div>
-    </div>
-
     <!-- Rate Us Modal -->
     <div id="rate-us-modal" class="modal-backdrop hidden">
       <div class="modal-box rate-card">
         <div class="modal-header">
-          <h3>Rate Us</h3>
+          <h3 data-i18n="rateUs">Rate Us</h3>
           <button data-close-modal="rate-us-modal" class="modal-close-btn">✕</button>
         </div>
         <p>Do you like Arrows!?</p>
@@ -624,7 +687,7 @@
           <span class="rate-star active" data-star="4">★</span>
           <span class="rate-star active" data-star="5">★</span>
         </div>
-        <button id="rate-submit-btn" class="btn-primary-play" style="margin-top: 20px;">Rate</button>
+        <button id="rate-submit-btn" class="btn-primary-play" style="margin-top: 20px;" data-i18n="rate">Rate</button>
       </div>
     </div>
 
@@ -632,12 +695,12 @@
     <div id="feedback-modal" class="modal-backdrop hidden">
       <div class="modal-box feedback-card">
         <div class="modal-header">
-          <h3>Feedback</h3>
+          <h3 data-i18n="feedback">Feedback</h3>
           <button data-close-modal="feedback-modal" class="modal-close-btn">✕</button>
         </div>
         <p>Tell us what you think or suggest new shapes!</p>
-        <textarea rows="4" placeholder="Your suggestions..." style="width: 100%; border: 1px solid #cbd5e1; border-radius: 12px; padding: 12px; font-family: inherit; font-size: 14px;"></textarea>
-        <button onclick="window.uiManager.showToast('Feedback submitted! Thank you!'); document.getElementById('feedback-modal').classList.add('hidden');" class="btn-primary-play" style="margin-top: 16px;">Submit</button>
+        <textarea id="feedback-textarea" rows="4" data-i18n="feedbackPlaceholder" placeholder="Your suggestions..." style="width: 100%; border: 1px solid #cbd5e1; border-radius: 12px; padding: 12px; font-family: inherit; font-size: 14px; resize: none;"></textarea>
+        <button id="feedback-submit-btn" class="btn-primary-play" style="margin-top: 16px;" data-i18n="submit">Submit</button>
       </div>
     </div>
 
@@ -645,14 +708,14 @@
     <div id="privacy-modal" class="modal-backdrop hidden">
       <div class="modal-box text-content-card">
         <div class="modal-header">
-          <h3>Privacy Policy</h3>
+          <h3 data-i18n="privacyPolicy">Privacy Policy</h3>
           <button data-close-modal="privacy-modal" class="modal-close-btn">✕</button>
         </div>
         <div class="text-body-scroll">
           <p>Arrows! is designed to provide an engaging, privacy-friendly puzzle experience.</p>
-          <p>We do not sell or collect your private information. All game progression, daily challenges, awards, and scores are stored locally on your device.</p>
+          <p>We do not sell or collect your private information. All game progression, profile settings, and trophies are stored locally on your device.</p>
         </div>
-        <button data-close-modal="privacy-modal" class="btn-secondary-flat" style="margin-top: 16px;">Close</button>
+        <button data-close-modal="privacy-modal" class="btn-secondary-flat" style="margin-top: 16px;" data-i18n="close">Close</button>
       </div>
     </div>
 
@@ -660,14 +723,14 @@
     <div id="terms-modal" class="modal-backdrop hidden">
       <div class="modal-box text-content-card">
         <div class="modal-header">
-          <h3>Terms of Service</h3>
+          <h3 data-i18n="termsOfService">Terms of Service</h3>
           <button data-close-modal="terms-modal" class="modal-close-btn">✕</button>
         </div>
         <div class="text-body-scroll">
           <p>By playing Arrows!, you agree to enjoy the puzzles and challenge your mind.</p>
           <p>All game assets, procedural levels, and original mechanics are protected by copyright.</p>
         </div>
-        <button data-close-modal="terms-modal" class="btn-secondary-flat" style="margin-top: 16px;">Close</button>
+        <button data-close-modal="terms-modal" class="btn-secondary-flat" style="margin-top: 16px;" data-i18n="close">Close</button>
       </div>
     </div>
 

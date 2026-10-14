@@ -1,29 +1,31 @@
 import { soundManager } from './sounds.js';
+import { canArrowEscape } from './mechanics.js';
 
 export const THEMES = {
   cream: {
     id: 'cream',
-    name: 'Warm Cream (Logo)',
+    name: 'Warm Cream',
     bg: '#fbf9f4',
     boardBg: '#fbf9f4',
-    arrowStroke: '#1a1f2c',
-    headFill: '#ff4d5e',
-    dotColor: '#e5decb',
+    arrowStroke: '#111625',
+    arrowFlying: '#3552ff',
+    arrowError: '#ef4444',
+    dotColor: '#d6cfbc',
     cardBg: '#ffffff',
-    textColor: '#1a1f2c',
-    accent: '#ff4d5e',
-    multiColor: true
+    textColor: '#111625',
+    accent: '#3552ff'
   },
   mint: {
     id: 'mint',
     name: 'Mint Garden',
     bg: '#ddf3e4',
     boardBg: '#ddf3e4',
-    arrowStroke: '#1b4332',
-    headFill: '#1b4332',
+    arrowStroke: '#133526',
+    arrowFlying: '#2563eb',
+    arrowError: '#ef4444',
     dotColor: '#a7d7b5',
     cardBg: '#ffffff',
-    textColor: '#1b4332',
+    textColor: '#133526',
     accent: '#10b981'
   },
   peach: {
@@ -31,59 +33,54 @@ export const THEMES = {
     name: 'Warm Sand',
     bg: '#f7ebd9',
     boardBg: '#f7ebd9',
-    arrowStroke: '#582f14',
-    headFill: '#582f14',
-    dotColor: '#e0c9a6',
+    arrowStroke: '#3a1f0d',
+    arrowFlying: '#2563eb',
+    arrowError: '#ef4444',
+    dotColor: '#d9be97',
     cardBg: '#ffffff',
-    textColor: '#582f14',
+    textColor: '#3a1f0d',
     accent: '#d97706'
   },
   slate: {
     id: 'slate',
-    name: 'Midnight Slate',
-    bg: '#1e2030',
-    boardBg: '#1e2030',
-    arrowStroke: '#c7d2fe',
-    headFill: '#c7d2fe',
-    dotColor: '#3730a3',
-    cardBg: '#27293d',
+    name: 'Dark Mode',
+    bg: '#0f172a',
+    boardBg: '#0f172a',
+    arrowStroke: '#f8fafc',
+    arrowFlying: '#38bdf8',
+    arrowError: '#f87171',
+    dotColor: '#334155',
+    cardBg: '#1e293b',
     textColor: '#f8fafc',
-    accent: '#818cf8'
+    accent: '#38bdf8'
   },
   sky: {
     id: 'sky',
     name: 'Sky Breeze',
     bg: '#e0f2fe',
     boardBg: '#e0f2fe',
-    arrowStroke: '#0369a1',
-    headFill: '#0369a1',
-    dotColor: '#bae6fd',
+    arrowStroke: '#073b61',
+    arrowFlying: '#2563eb',
+    arrowError: '#ef4444',
+    dotColor: '#a7d8f5',
     cardBg: '#ffffff',
-    textColor: '#0369a1',
-    accent: '#0ea5e9'
+    textColor: '#073b61',
+    accent: '#0284c7'
   },
   white: {
     id: 'white',
     name: 'Pure Minimal',
     bg: '#ffffff',
     boardBg: '#ffffff',
-    arrowStroke: '#18181b',
-    headFill: '#18181b',
+    arrowStroke: '#09090b',
+    arrowFlying: '#2563eb',
+    arrowError: '#ef4444',
     dotColor: '#e4e4e7',
     cardBg: '#ffffff',
     textColor: '#09090b',
-    accent: '#4f46e5'
+    accent: '#2563eb'
   }
 };
-
-export const ARROW_PALETTE = [
-  { fill: '#ff4d5e', border: '#1a1f2c', highlight: 'rgba(255, 255, 255, 0.65)', name: 'coral' },  // Coral Red (Logo)
-  { fill: '#2eb5fa', border: '#1a1f2c', highlight: 'rgba(255, 255, 255, 0.70)', name: 'sky' },    // Sky Blue (Logo)
-  { fill: '#27324c', border: '#10141f', highlight: 'rgba(255, 255, 255, 0.40)', name: 'navy' },   // Midnight Navy (Logo)
-  { fill: '#10b981', border: '#142e23', highlight: 'rgba(255, 255, 255, 0.60)', name: 'emerald' },// Mint Green
-  { fill: '#ffa502', border: '#302110', highlight: 'rgba(255, 255, 255, 0.65)', name: 'amber' },  // Golden Amber
-  { fill: '#8854d0', border: '#211434', highlight: 'rgba(255, 255, 255, 0.60)', name: 'violet' }  // Royal Purple
-];
 
 const PRAISE_WORDS = ['Good!', 'Awesome!', 'Wonderful!', 'Eagle Eye! 👍', 'Flawless!', 'Brilliant!'];
 
@@ -98,7 +95,7 @@ export class ArrowGame {
     this.theme = THEMES.cream;
 
     // Game state
-    this.lives = 3; // 3 RED droplets!
+    this.lives = 3;
     this.maxLives = 3;
     this.combo = 0;
     this.score = 0;
@@ -131,7 +128,7 @@ export class ArrowGame {
     this.initialScale = 1;
 
     this.cellSize = 44;
-    this.lineWidth = 14;
+    this.lineWidth = 4.5;
 
     this.setupListeners();
     this.startRenderLoop();
@@ -193,15 +190,14 @@ export class ArrowGame {
     const width = this.canvas.clientWidth || window.innerWidth;
     const height = this.canvas.clientHeight || (window.innerHeight - 150);
 
-    const dpr = window.devicePixelRatio || 1;
-    this.canvas.width = width * dpr;
-    this.canvas.height = height * dpr;
+    const dpr = Math.min(3, window.devicePixelRatio || 1);
+    this.canvas.width = Math.floor(width * dpr);
+    this.canvas.height = Math.floor(height * dpr);
     this.ctx.resetTransform();
     this.ctx.scale(dpr, dpr);
 
     if (!this.level) return;
 
-    // Calculate grid bounding box
     let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
     this.arrows.forEach(a => {
       a.points.forEach(p => {
@@ -217,8 +213,8 @@ export class ArrowGame {
       minY = 0; maxY = this.level.height || 10;
     }
 
-    const gridW = (maxX - minX + 2) * this.cellSize;
-    const gridH = (maxY - minY + 2) * this.cellSize;
+    const gridW = (maxX - minX + 2.5) * this.cellSize;
+    const gridH = (maxY - minY + 2.5) * this.cellSize;
 
     const scaleX = (width * 0.88) / gridW;
     const scaleY = (height * 0.82) / gridH;
@@ -276,7 +272,7 @@ export class ArrowGame {
       this.scale = newScale;
     }, { passive: false });
 
-    // Touch handlers for mobile
+    // Touch handlers for Android and mobile devices
     let touchStartX = 0, touchStartY = 0;
     this.canvas.addEventListener('touchstart', (e) => {
       if (e.touches.length === 1) {
@@ -336,9 +332,10 @@ export class ArrowGame {
     if (this.isGameOver || this.isVictory) return;
     const worldPos = this.screenToWorld(screenX, screenY);
 
-    // Find clicked arrow (distance to any of its segments <= 0.45)
+    // Responsive hit threshold for Android touch screens (at least 36px on screen)
+    const hitThreshold = Math.max(0.7, 36 / (this.scale * this.cellSize));
     let clickedArrow = null;
-    let minDist = 0.45;
+    let minDist = hitThreshold;
 
     for (const arrow of this.arrows) {
       if (arrow.solved) continue;
@@ -366,92 +363,8 @@ export class ArrowGame {
     return Math.hypot(p.x - (v.x + t * (w.x - v.x)), p.y - (v.y + t * (w.y - v.y)));
   }
 
-  // Collision ray-cast check: Can arrow cleanly fly out along its direction?
-  canArrowEscape(arrow) {
-    const dir = arrow.direction;
-    const headP = arrow.points[arrow.points.length - 1];
-
-    // For every active other arrow:
-    for (const other of this.arrows) {
-      if (other.id === arrow.id || other.solved) continue;
-
-      // Check if other arrow's segments lie directly in the path of arrow's forward sweep
-      for (let i = 0; i < other.points.length - 1; i++) {
-        const op1 = other.points[i];
-        const op2 = other.points[i + 1];
-
-        // Ray from head forward:
-        if (this.rayIntersectsSegment(headP, dir, op1, op2)) {
-          return false;
-        }
-
-        // Also check if any other segment of this arrow swept forward collides with other
-        for (let j = 0; j < arrow.points.length - 1; j++) {
-          const ap1 = arrow.points[j];
-          const ap2 = arrow.points[j + 1];
-          if (this.sweptSegmentIntersects(ap1, ap2, dir, op1, op2)) {
-            return false;
-          }
-        }
-      }
-    }
-
-    return true;
-  }
-
-  rayIntersectsSegment(origin, dir, s1, s2) {
-    // Check horizontal ray
-    if (dir.dy === 0) {
-      const yMin = Math.min(s1.y, s2.y) - 0.25;
-      const yMax = Math.max(s1.y, s2.y) + 0.25;
-      if (origin.y >= yMin && origin.y <= yMax) {
-        const segXMin = Math.min(s1.x, s2.x);
-        const segXMax = Math.max(s1.x, s2.x);
-        if (dir.dx > 0 && segXMax > origin.x + 0.1) return true;
-        if (dir.dx < 0 && segXMin < origin.x - 0.1) return true;
-      }
-    }
-    // Check vertical ray
-    if (dir.dx === 0) {
-      const xMin = Math.min(s1.x, s2.x) - 0.25;
-      const xMax = Math.max(s1.x, s2.x) + 0.25;
-      if (origin.x >= xMin && origin.x <= xMax) {
-        const segYMin = Math.min(s1.y, s2.y);
-        const segYMax = Math.max(s1.y, s2.y);
-        if (dir.dy > 0 && segYMax > origin.y + 0.1) return true;
-        if (dir.dy < 0 && segYMin < origin.y - 0.1) return true;
-      }
-    }
-    return false;
-  }
-
-  sweptSegmentIntersects(ap1, ap2, dir, op1, op2) {
-    // If arrow segment moving in dir intersects obstacle segment
-    const axMin = Math.min(ap1.x, ap2.x);
-    const axMax = Math.max(ap1.x, ap2.x);
-    const ayMin = Math.min(ap1.y, ap2.y);
-    const ayMax = Math.max(ap1.y, ap2.y);
-
-    const oxMin = Math.min(op1.x, op2.x);
-    const oxMax = Math.max(op1.x, op2.x);
-    const oyMin = Math.min(op1.y, op2.y);
-    const oyMax = Math.max(op1.y, op2.y);
-
-    if (dir.dx > 0) {
-      // Moving right: checks if y ranges overlap and obstacle is to the right
-      const yOverlap = Math.max(ayMin, oyMin) <= Math.min(ayMax, oyMax) + 0.2;
-      if (yOverlap && oxMax > axMax + 0.1) return true;
-    } else if (dir.dx < 0) {
-      const yOverlap = Math.max(ayMin, oyMin) <= Math.min(ayMax, oyMax) + 0.2;
-      if (yOverlap && oxMin < axMin - 0.1) return true;
-    } else if (dir.dy > 0) {
-      const xOverlap = Math.max(axMin, oxMin) <= Math.min(axMax, oxMax) + 0.2;
-      if (xOverlap && oyMax > ayMax + 0.1) return true;
-    } else if (dir.dy < 0) {
-      const xOverlap = Math.max(axMin, oxMin) <= Math.min(axMax, oxMax) + 0.2;
-      if (xOverlap && oyMin < ayMin - 0.1) return true;
-    }
-    return false;
+  canArrowEscape(arrow, arrowList = null) {
+    return canArrowEscape(arrow, arrowList || this.arrows);
   }
 
   onArrowTapped(arrow) {
@@ -462,19 +375,19 @@ export class ArrowGame {
     const canEscape = this.canArrowEscape(arrow);
 
     if (canEscape) {
-      // SUCCESS! Fly out
+      // SUCCESS! Fly out smoothly in blue
       this.combo++;
       const earnedScore = 100 * this.combo;
       this.score += earnedScore;
 
       soundManager.playFly(this.combo);
 
-      // Launch flying arrow animation
+      // Launch flying arrow animation rigidly in direction of arrowhead
       this.flyingArrows.push({
         arrow: JSON.parse(JSON.stringify(arrow)),
         progress: 0,
-        vx: arrow.direction.dx * 1.2,
-        vy: arrow.direction.dy * 1.2,
+        vx: arrow.direction.dx * 1.5,
+        vy: arrow.direction.dy * 1.5,
         alpha: 1
       });
 
@@ -489,12 +402,10 @@ export class ArrowGame {
         y: headP.y * this.cellSize,
         alpha: 1,
         vy: -1.5,
-        color: this.theme.accent
+        color: this.theme.arrowFlying || '#3552ff'
       });
 
-      // Spawn 4-pointed sparkle stars and dots (matching reference logo!)
-      const arrowColor = this.getArrowColor(arrow, false);
-      this.spawnParticles(headP.x * this.cellSize, headP.y * this.cellSize, arrowColor.fill);
+      this.spawnParticles(headP.x * this.cellSize, headP.y * this.cellSize, this.theme.arrowFlying);
 
       if (this.options.onScoreUpdate) {
         this.options.onScoreUpdate(this.score, this.combo);
@@ -535,11 +446,7 @@ export class ArrowGame {
   }
 
   useHint() {
-    if (this.hintsUsed >= 3 && !this.level.isDaily) {
-      // Out of hints
-    }
-    // Find unblocked arrow
-    const freeArrows = this.arrows.filter(a => !a.solved && this.canArrowEscape(a));
+    const freeArrows = this.arrows.filter(a => !a.solved && canArrowEscape(a, this.arrows));
     if (freeArrows.length > 0) {
       const chosen = freeArrows[0];
       this.hintArrowId = chosen.id;
@@ -570,7 +477,6 @@ export class ArrowGame {
     clearInterval(this.timerInterval);
     soundManager.playVictory();
 
-    // Trigger celebratory confetti burst
     this.spawnVictoryConfetti();
 
     if (this.options.onVictory) {
@@ -597,36 +503,8 @@ export class ArrowGame {
     }
   }
 
-  getArrowColor(arrow, isHinted) {
-    if (arrow.isError) {
-      return { fill: '#ef4444', border: '#7f1d1d', highlight: 'rgba(255, 255, 255, 0.70)' };
-    }
-    if (isHinted) {
-      const pulseVal = (Math.sin(this.hintPulse) + 1) / 2;
-      const fill = pulseVal > 0.5 ? '#10b981' : '#34d399';
-      return { fill, border: '#064e3b', highlight: 'rgba(255, 255, 255, 0.75)' };
-    }
-
-    if (this.theme.multiColor || this.theme.id === 'cream') {
-      let hash = 0;
-      const str = String(arrow.id || '');
-      for (let i = 0; i < str.length; i++) {
-        hash = (hash << 5) - hash + str.charCodeAt(i);
-        hash |= 0;
-      }
-      return ARROW_PALETTE[Math.abs(hash) % ARROW_PALETTE.length];
-    }
-
-    return {
-      fill: this.theme.headFill,
-      border: this.theme.arrowStroke === '#ffffff' ? '#1e293b' : (this.theme.id === 'slate' ? '#090d16' : '#141d28'),
-      highlight: 'rgba(255, 255, 255, 0.45)'
-    };
-  }
-
   spawnParticles(x, y, color = null) {
     const starColors = color ? [color, '#ffffff', '#ffd700'] : ['#ff4d5e', '#2eb5fa', '#27324c', '#ffd700', '#ffffff'];
-    // 4-pointed sparkle stars radiating outward (matches reference logo)
     for (let i = 0; i < 6; i++) {
       const angle = Math.random() * Math.PI * 2;
       const speed = 1.6 + Math.random() * 3.4;
@@ -644,26 +522,9 @@ export class ArrowGame {
         rotSpeed: (Math.random() - 0.5) * 0.25
       });
     }
-    // Sparkle dots (circular dots from reference logo)
-    for (let i = 0; i < 4; i++) {
-      const angle = Math.random() * Math.PI * 2;
-      const speed = 1 + Math.random() * 2.5;
-      this.particles.push({
-        x,
-        y,
-        vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed,
-        size: 2.2 + Math.random() * 2,
-        color: this.theme.arrowStroke || '#1a1f2c',
-        alpha: 1,
-        decay: 0.035,
-        isDot: true
-      });
-    }
   }
 
   spawnDropletSplash(x, y) {
-    // Red liquid droplet splash on mistake / collision
     for (let i = 0; i < 6; i++) {
       const angle = Math.random() * Math.PI * 2;
       const speed = 2 + Math.random() * 4;
@@ -733,10 +594,8 @@ export class ArrowGame {
   }
 
   update() {
-    // Update hint pulse
     this.hintPulse += 0.08;
 
-    // Update floating texts
     for (let i = this.floatingTexts.length - 1; i >= 0; i--) {
       const ft = this.floatingTexts[i];
       ft.y += ft.vy;
@@ -746,7 +605,6 @@ export class ArrowGame {
       }
     }
 
-    // Update flying arrows
     for (let i = this.flyingArrows.length - 1; i >= 0; i--) {
       const fa = this.flyingArrows[i];
       fa.progress += 0.05;
@@ -762,7 +620,6 @@ export class ArrowGame {
       }
     }
 
-    // Update particles
     for (let i = this.particles.length - 1; i >= 0; i--) {
       const p = this.particles[i];
       p.x += p.vx;
@@ -775,7 +632,6 @@ export class ArrowGame {
       }
     }
 
-    // Update shakes
     this.arrows.forEach(a => {
       if (a.shake > 0) {
         a.shake *= 0.82;
@@ -789,7 +645,6 @@ export class ArrowGame {
     const width = this.canvas.clientWidth;
     const height = this.canvas.clientHeight;
 
-    // Background
     ctx.fillStyle = this.theme.bg;
     ctx.fillRect(0, 0, width, height);
 
@@ -797,19 +652,18 @@ export class ArrowGame {
     ctx.translate(this.offsetX, this.offsetY);
     ctx.scale(this.scale, this.scale);
 
-    // Draw subtle grid dots
     if (this.level && this.options.showGuidelines !== false) {
       this.drawDotGrid(ctx);
     }
 
-    // Draw active arrows
+    // Active arrows
     this.arrows.forEach(arrow => {
       if (!arrow.solved) {
-        this.drawArrow(ctx, arrow);
+        this.drawArrow(ctx, arrow, false);
       }
     });
 
-    // Draw flying arrows
+    // Flying arrows (vibrant electric blue)
     this.flyingArrows.forEach(fa => {
       ctx.save();
       ctx.globalAlpha = Math.max(0, fa.alpha);
@@ -817,20 +671,20 @@ export class ArrowGame {
       ctx.restore();
     });
 
-    // Draw floating praise words
+    // Floating text
     this.floatingTexts.forEach(ft => {
       ctx.save();
       ctx.globalAlpha = Math.max(0, ft.alpha);
-      ctx.font = 'bold 26px "Outfit", sans-serif';
-      ctx.fillStyle = ft.color || '#10b981';
+      ctx.font = 'bold 24px "Outfit", sans-serif';
+      ctx.fillStyle = ft.color || '#3552ff';
       ctx.textAlign = 'center';
-      ctx.shadowColor = 'rgba(0,0,0,0.2)';
-      ctx.shadowBlur = 8;
+      ctx.shadowColor = 'rgba(0,0,0,0.15)';
+      ctx.shadowBlur = 6;
       ctx.fillText(ft.text, ft.x, ft.y);
       ctx.restore();
     });
 
-    // Draw particles
+    // Particles
     this.particles.forEach(p => {
       ctx.save();
       ctx.globalAlpha = Math.max(0, p.alpha);
@@ -865,36 +719,46 @@ export class ArrowGame {
     for (let x = minX; x <= maxX; x++) {
       for (let y = minY; y <= maxY; y++) {
         ctx.beginPath();
-        ctx.arc(x * this.cellSize, y * this.cellSize, 2.2, 0, Math.PI * 2);
+        ctx.arc(x * this.cellSize, y * this.cellSize, 2.0, 0, Math.PI * 2);
         ctx.fill();
       }
     }
   }
 
+  /**
+   * Draws a crisp, true arrow:
+   * - Sleek line stroke with round joins and caps
+   * - Sharp, classic arrow tip pointing forward
+   * - Vibrant blue when flying
+   * - Flashes red when blocked
+   */
   drawArrow(ctx, arrow, isFlying = false) {
     const isHinted = this.hintArrowId === arrow.id;
-    const colorInfo = this.getArrowColor(arrow, isHinted);
 
     ctx.save();
 
-    // Apply shake offset if bumped
     if (arrow.shake > 0) {
       const shakeOffset = Math.sin(Date.now() * 0.05) * arrow.shake;
       ctx.translate(arrow.shakeDir.x * (shakeOffset / 10), arrow.shakeDir.y * (shakeOffset / 10));
     }
 
-    // Glow for hints
-    if (isHinted) {
+    let strokeColor = this.theme.arrowStroke;
+    if (arrow.isError) {
+      strokeColor = this.theme.arrowError || '#ef4444';
+    } else if (isFlying) {
+      strokeColor = this.theme.arrowFlying || '#3552ff';
+    } else if (isHinted) {
+      const pulse = (Math.sin(this.hintPulse) + 1) / 2;
+      strokeColor = pulse > 0.5 ? '#10b981' : '#34d399';
       ctx.shadowColor = '#10b981';
-      ctx.shadowBlur = 18;
+      ctx.shadowBlur = 14;
     }
 
-    const tubeRadius = this.lineWidth;
-    const borderExtra = 6.5;
+    const strokeWidth = this.lineWidth;
 
-    // 1. Outer Dark Tube Outline
-    ctx.strokeStyle = colorInfo.border;
-    ctx.lineWidth = tubeRadius + borderExtra;
+    // Draw Arrow Shaft / Line
+    ctx.strokeStyle = strokeColor;
+    ctx.lineWidth = strokeWidth;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
 
@@ -907,110 +771,38 @@ export class ArrowGame {
     });
     ctx.stroke();
 
-    // 2. Inner Vibrant Tube Fill
-    ctx.strokeStyle = colorInfo.fill;
-    ctx.lineWidth = tubeRadius;
-    ctx.stroke();
-
-    // 3. Glossy 3D Highlight Reflection (White sheen along top/left edge)
-    ctx.save();
-    ctx.strokeStyle = colorInfo.highlight;
-    ctx.lineWidth = 3.2;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-
-    for (let i = 0; i < arrow.points.length - 1; i++) {
-      const p1 = arrow.points[i];
-      const p2 = arrow.points[i + 1];
-      const x1 = p1.x * this.cellSize;
-      const y1 = p1.y * this.cellSize;
-      const x2 = p2.x * this.cellSize;
-      const y2 = p2.y * this.cellSize;
-
-      const isHorizontal = Math.abs(y1 - y2) < 1;
-      const isVertical = Math.abs(x1 - x2) < 1;
-
-      ctx.beginPath();
-      if (isHorizontal) {
-        const offset = -3.5;
-        const startX = Math.min(x1, x2) + 6;
-        const endX = Math.max(x1, x2) - 6;
-        if (endX > startX) {
-          ctx.moveTo(startX, y1 + offset);
-          ctx.lineTo(endX, y1 + offset);
-          ctx.stroke();
-        }
-      } else if (isVertical) {
-        const offset = -3.5;
-        const startY = Math.min(y1, y2) + 6;
-        const endY = Math.max(y1, y2) - 6;
-        if (endY > startY) {
-          ctx.moveTo(x1 + offset, startY);
-          ctx.lineTo(x1 + offset, endY);
-          ctx.stroke();
-        }
-      }
-    }
-
-    // Glossy pip at the tail cap
-    const tailP = arrow.points[0];
-    ctx.fillStyle = colorInfo.highlight;
-    ctx.beginPath();
-    ctx.arc(tailP.x * this.cellSize - 2, tailP.y * this.cellSize - 2, 2.5, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-
-    // 4. Arrowhead with outline, fill and facet shine
+    // Draw Arrow Head at the front tip
     const headP = arrow.points[arrow.points.length - 1];
     const prevP = arrow.points[arrow.points.length - 2] || headP;
     const angle = Math.atan2(headP.y - prevP.y, headP.x - prevP.x);
 
-    this.drawArrowHead(ctx, headP.x * this.cellSize, headP.y * this.cellSize, angle, colorInfo);
+    this.drawArrowHead(ctx, headP.x * this.cellSize, headP.y * this.cellSize, angle, strokeColor);
 
     ctx.restore();
   }
 
-  drawArrowHead(ctx, x, y, angle, colorInfo) {
+  drawArrowHead(ctx, x, y, angle, color) {
     ctx.save();
     ctx.translate(x, y);
     ctx.rotate(angle);
 
-    const headLength = 26;
-    const headWidth = 24;
+    const headLength = 16;
+    const headWidth = 14;
 
-    // Outer Dark Border
-    ctx.fillStyle = colorInfo.border;
-    ctx.strokeStyle = colorInfo.border;
-    ctx.lineWidth = 4;
+    ctx.fillStyle = color;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.5;
     ctx.lineJoin = 'round';
 
+    // Sharp, crisp classic arrow tip
     ctx.beginPath();
-    ctx.moveTo(headLength * 0.5, 0); // Tip
-    ctx.lineTo(-headLength * 0.5, -headWidth * 0.5); // Wing left
-    ctx.lineTo(-headLength * 0.2, 0); // Base indent
-    ctx.lineTo(-headLength * 0.5, headWidth * 0.5); // Wing right
+    ctx.moveTo(headLength * 0.6, 0); // Tip
+    ctx.lineTo(-headLength * 0.4, -headWidth * 0.5); // Wing Left
+    ctx.lineTo(-headLength * 0.15, 0); // Inner Notch
+    ctx.lineTo(-headLength * 0.4, headWidth * 0.5); // Wing Right
     ctx.closePath();
     ctx.fill();
     ctx.stroke();
-
-    // Inner Color Fill
-    ctx.fillStyle = colorInfo.fill;
-    ctx.beginPath();
-    ctx.moveTo(headLength * 0.44, 0);
-    ctx.lineTo(-headLength * 0.44, -headWidth * 0.42);
-    ctx.lineTo(-headLength * 0.18, 0);
-    ctx.lineTo(-headLength * 0.44, headWidth * 0.42);
-    ctx.closePath();
-    ctx.fill();
-
-    // Glossy highlight reflection on the upper facet
-    ctx.fillStyle = colorInfo.highlight;
-    ctx.beginPath();
-    ctx.moveTo(headLength * 0.25, -2);
-    ctx.lineTo(-headLength * 0.35, -headWidth * 0.32);
-    ctx.lineTo(-headLength * 0.15, -4);
-    ctx.closePath();
-    ctx.fill();
 
     ctx.restore();
   }

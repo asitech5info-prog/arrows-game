@@ -1,9 +1,10 @@
 import { ArrowGame, THEMES } from './game.js';
 import { generateLevel, getDailyChallengeLevel, isHardLevel, getHardShapeForLevel } from './levels.js';
 import { soundManager } from './sounds.js';
+import { IN_GAME_PFPS, getAvatarHTML } from './avatars.js';
+import { setLanguage, getCurrentLanguage, SUPPORTED_LANGUAGES, t, applyTranslations } from './i18n.js';
 
-// Local storage keys
-const STORAGE_KEY = 'arrows_game_state_v1';
+const STORAGE_KEY = 'arrows_game_state_v2';
 
 export class UIManager {
   constructor() {
@@ -14,8 +15,19 @@ export class UIManager {
     this.selectedDailyMonth = new Date().getMonth();
     this.selectedDailyYear = 2026;
 
+    // Temporary editing state for profile modal
+    this.tempProfile = {
+      name: this.state.profile.name || 'Player',
+      pfpId: this.state.profile.pfpId || 'fox',
+      customPhoto: this.state.profile.customPhoto || null
+    };
+
+    setLanguage(this.state.language || 'en');
     this.initAudioAndSettings();
     this.bindDOM();
+    this.applyThemeMode(this.state.darkTheme);
+    this.updateProfileUI();
+    this.updateLockBadges();
     this.setupSplashScreen();
   }
 
@@ -23,15 +35,19 @@ export class UIManager {
     const defaultState = {
       level: 1,
       maxLevelReached: 1,
-      streak: 1,
-      lastPlayDate: new Date().toDateString(),
-      completedDailyChallenges: {}, // key: "YYYY-MM-DD"
+      language: 'en',
+      darkTheme: false,
       theme: 'cream',
       sound: true,
       music: false,
       vibration: true,
-      voice: true,
       guidelines: true,
+      profile: {
+        name: 'Player',
+        pfpId: 'fox',
+        customPhoto: null
+      },
+      completedDailyChallenges: {},
       records: {
         longestStreak: 1,
         highestWinStreak: 10,
@@ -71,7 +87,7 @@ export class UIManager {
       sound: this.state.sound,
       music: this.state.music,
       vibration: this.state.vibration,
-      voice: this.state.voice
+      voice: true
     });
   }
 
@@ -94,17 +110,18 @@ export class UIManager {
       onThemeChange: (theme) => this.applyThemeToDOM(theme)
     });
 
-    this.game.setTheme(this.state.theme);
+    const activeTheme = this.state.darkTheme ? 'slate' : (this.state.theme || 'cream');
+    this.game.setTheme(activeTheme);
 
     // Navigation buttons
     document.querySelectorAll('[data-nav]').forEach(btn => {
-      btn.addEventListener('click', (e) => {
+      btn.addEventListener('click', () => {
         const targetView = btn.getAttribute('data-nav');
         this.navigateTo(targetView);
       });
     });
 
-    // Home Play button
+    // Home Play button (starts current level)
     const homePlayBtn = document.getElementById('home-play-btn');
     if (homePlayBtn) {
       homePlayBtn.addEventListener('click', () => {
@@ -113,33 +130,21 @@ export class UIManager {
       });
     }
 
-    // Home Daily Card Play button
-    const homeDailyPlayBtn = document.getElementById('home-daily-play-btn');
-    if (homeDailyPlayBtn) {
-      homeDailyPlayBtn.addEventListener('click', () => {
+    // Profile Pill on Home screen
+    const homeProfilePill = document.getElementById('home-profile-pill');
+    if (homeProfilePill) {
+      homeProfilePill.addEventListener('click', () => {
         soundManager.playTap();
-        if (this.state.level < 20) {
-          this.showLockToast('Daily Challenge unlocks at Level 20! Keep playing.');
-          return;
-        }
-        this.startDailyChallenge(new Date().getDate());
+        this.showProfileModal();
       });
     }
 
-    // Level selector button / jump
-    const levelJumpBtn = document.getElementById('level-jump-btn');
-    if (levelJumpBtn) {
-      levelJumpBtn.addEventListener('click', () => {
-        this.showLevelSelectModal();
-      });
-    }
-
-    // Streak pill
-    const streakBadge = document.getElementById('home-streak-badge');
-    if (streakBadge) {
-      streakBadge.addEventListener('click', () => {
+    // Theme button next to Settings in Bottom Nav
+    const navThemeBtn = document.getElementById('nav-theme-btn');
+    if (navThemeBtn) {
+      navThemeBtn.addEventListener('click', () => {
         soundManager.playTap();
-        this.showStreakModal();
+        this.toggleThemePicker();
       });
     }
 
@@ -182,7 +187,7 @@ export class UIManager {
         soundManager.playTap();
         const success = this.game.useHint();
         if (!success) {
-          this.showToast('No safe moves right now! Look closely.');
+          this.showToast(t('noSafeMoves'));
         }
       });
     }
@@ -196,11 +201,68 @@ export class UIManager {
       });
     });
 
+    // Profile Modal controls
+    this.setupProfileModal();
+
     // Settings screen switches
     this.setupSettingsSwitches();
 
     // Challenge screen controls
     this.setupChallengeScreen();
+
+    // Victory modal buttons
+    const victoryNextBtn = document.getElementById('victory-next-btn');
+    if (victoryNextBtn) {
+      victoryNextBtn.addEventListener('click', () => {
+        soundManager.playTap();
+        document.getElementById('victory-modal')?.classList.add('hidden');
+        this.state.level++;
+        if (this.state.level > this.state.maxLevelReached) {
+          this.state.maxLevelReached = this.state.level;
+        }
+        this.saveState();
+        this.updateHomeLevelDisplay();
+        this.updateLockBadges();
+        this.startLevel(this.state.level);
+      });
+    }
+
+    const victoryHomeBtn = document.getElementById('victory-home-btn');
+    if (victoryHomeBtn) {
+      victoryHomeBtn.addEventListener('click', () => {
+        soundManager.playTap();
+        document.getElementById('victory-modal')?.classList.add('hidden');
+        this.navigateTo('home');
+      });
+    }
+
+    // Game Over ("Out of Moves!") Modal buttons
+    const goReviveBtn = document.getElementById('gameover-revive-btn');
+    if (goReviveBtn) {
+      goReviveBtn.addEventListener('click', () => {
+        soundManager.playTap();
+        document.getElementById('gameover-modal')?.classList.add('hidden');
+        this.game.revive();
+      });
+    }
+
+    const goRetryBtn = document.getElementById('gameover-retry-btn');
+    if (goRetryBtn) {
+      goRetryBtn.addEventListener('click', () => {
+        soundManager.playTap();
+        document.getElementById('gameover-modal')?.classList.add('hidden');
+        this.game.restartLevel();
+      });
+    }
+
+    const goHomeBtn = document.getElementById('gameover-home-btn');
+    if (goHomeBtn) {
+      goHomeBtn.addEventListener('click', () => {
+        soundManager.playTap();
+        document.getElementById('gameover-modal')?.classList.add('hidden');
+        this.navigateTo('home');
+      });
+    }
 
     // Generic modal close buttons
     document.querySelectorAll('[data-close-modal]').forEach(btn => {
@@ -210,6 +272,16 @@ export class UIManager {
         document.getElementById(modalId)?.classList.add('hidden');
       });
     });
+
+    // In-game restart button inside in-game settings modal
+    const igRestartBtn = document.getElementById('ig-restart-btn');
+    if (igRestartBtn) {
+      igRestartBtn.addEventListener('click', () => {
+        soundManager.playTap();
+        document.getElementById('in-game-settings-modal')?.classList.add('hidden');
+        this.game.restartLevel();
+      });
+    }
   }
 
   setupSplashScreen() {
@@ -233,103 +305,398 @@ export class UIManager {
           }, 450);
         }, 200);
       }
-    }, 40);
+    }, 35);
   }
 
   navigateTo(viewName) {
-    // Check level locks for Collection and Challenges
     if (viewName === 'collection' && this.state.level < 8) {
-      this.showLockToast('Collection unlocks at Level 8! Clear 8 levels to view your trophies.');
+      this.showToast(t('collectionLockMsg'));
       return;
     }
     if (viewName === 'challenge' && this.state.level < 20) {
-      this.showLockToast('Daily Challenge unlocks at Level 20! Keep playing.');
+      this.showToast(t('challengeLockMsg'));
       return;
     }
 
     this.currentView = viewName;
 
-    // Hide all view screens
-    ['home-screen', 'game-screen', 'challenge-screen', 'collection-screen', 'settings-screen'].forEach(id => {
-      document.getElementById(id)?.classList.add('hidden');
-    });
-
-    // Update active tab in bottom nav
-    document.querySelectorAll('.bottom-nav-item').forEach(item => {
-      if (item.getAttribute('data-nav') === viewName) {
-        item.classList.add('active');
-      } else {
-        item.classList.remove('active');
+    document.querySelectorAll('.screen-view').forEach(screen => {
+      if (screen.id !== 'splash-screen') {
+        screen.classList.add('hidden');
       }
     });
 
-    // Show active screen
     const targetEl = document.getElementById(`${viewName}-screen`);
     if (targetEl) {
       targetEl.classList.remove('hidden');
     }
 
-    // Update screen specific state
+    document.querySelectorAll('.bottom-nav-item').forEach(item => {
+      item.classList.toggle('active', item.getAttribute('data-nav') === viewName);
+    });
+
     if (viewName === 'home') {
-      this.renderHomeScreen();
+      this.updateHomeLevelDisplay();
+      this.updateProfileUI();
+      this.updateLockBadges();
     } else if (viewName === 'challenge') {
-      this.renderChallengeScreen();
+      this.renderCalendar();
     } else if (viewName === 'collection') {
       this.renderCollectionScreen();
-    } else if (viewName === 'settings') {
-      this.renderSettingsScreen();
     }
 
-    // Toggle bottom nav visibility (visible on home, challenge, collection, settings; hidden on game screen)
     const bottomNav = document.getElementById('bottom-navigation');
     if (bottomNav) {
-      if (viewName === 'game') {
-        bottomNav.classList.add('hidden');
-      } else {
-        bottomNav.classList.remove('hidden');
-      }
+      bottomNav.style.display = (viewName === 'game') ? 'none' : 'flex';
     }
   }
 
-  renderHomeScreen() {
-    // Update Streak
-    const streakEl = document.getElementById('streak-count-val');
-    if (streakEl) streakEl.textContent = this.state.streak;
-
-    // Update Level and Difficulty
-    const levelNumberEl = document.getElementById('home-level-number');
-    if (levelNumberEl) levelNumberEl.textContent = `Level ${this.state.level}`;
-
+  updateHomeLevelDisplay() {
+    const lvlNum = document.getElementById('home-level-number');
     const diffBadge = document.getElementById('home-difficulty-badge');
-    const isHard = isHardLevel(this.state.level);
+
+    if (lvlNum) {
+      lvlNum.textContent = `${t('level')} ${this.state.level}`;
+    }
     if (diffBadge) {
-      if (isHard) {
-        const shape = getHardShapeForLevel(this.state.level);
-        diffBadge.textContent = `Hard (${shape || 'Maze'})`;
-        diffBadge.className = 'difficulty-pill hard';
+      const isHard = isHardLevel(this.state.level);
+      diffBadge.textContent = isHard ? t('hard') : t('normal');
+      diffBadge.className = `difficulty-pill ${isHard ? 'hard' : 'normal'}`;
+    }
+  }
+
+  updateLockBadges() {
+    const challengeLock = document.getElementById('nav-challenge-lock');
+    if (challengeLock) {
+      challengeLock.style.display = (this.state.level < 20) ? 'inline-block' : 'none';
+    }
+
+    const collectionLock = document.getElementById('nav-collection-lock');
+    if (collectionLock) {
+      collectionLock.style.display = (this.state.level < 8) ? 'inline-block' : 'none';
+    }
+  }
+
+  updateProfileUI() {
+    const nameEl = document.getElementById('home-player-name');
+    if (nameEl) {
+      nameEl.textContent = this.state.profile.name || 'Player';
+    }
+    const avatarEl = document.getElementById('home-avatar-icon');
+    if (avatarEl) {
+      avatarEl.innerHTML = getAvatarHTML(this.state.profile);
+    }
+  }
+
+  setupProfileModal() {
+    const grid = document.getElementById('pfp-grid-container');
+    if (grid) {
+      grid.innerHTML = IN_GAME_PFPS.map(pfp => `
+        <div class="pfp-choice-item" data-pfp-id="${pfp.id}" title="${pfp.name}">
+          <div class="pfp-choice-circle" style="background: ${pfp.bg};">${pfp.emoji}</div>
+          <span class="pfp-choice-name">${pfp.name}</span>
+        </div>
+      `).join('');
+
+      grid.querySelectorAll('.pfp-choice-item').forEach(item => {
+        item.addEventListener('click', () => {
+          const id = item.getAttribute('data-pfp-id');
+          this.tempProfile.pfpId = id;
+          this.tempProfile.customPhoto = null; // clear custom when choosing in-game
+          this.renderProfileModalPreview();
+        });
+      });
+    }
+
+    // Custom photo file input
+    const uploadTrigger = document.getElementById('profile-upload-trigger-btn');
+    const fileInput = document.getElementById('profile-photo-file-input');
+    if (uploadTrigger && fileInput) {
+      uploadTrigger.addEventListener('click', () => fileInput.click());
+      fileInput.addEventListener('change', (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          // Compress image via offscreen canvas
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const size = 160;
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, size, size);
+            this.tempProfile.customPhoto = canvas.toDataURL('image/jpeg', 0.85);
+            this.renderProfileModalPreview();
+          };
+          img.src = evt.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    // Save profile button
+    const saveBtn = document.getElementById('profile-save-btn');
+    if (saveBtn) {
+      saveBtn.addEventListener('click', () => {
+        soundManager.playTap();
+        const nameInput = document.getElementById('profile-name-input');
+        const newName = nameInput?.value?.trim() || 'Player';
+        this.state.profile.name = newName;
+        this.state.profile.pfpId = this.tempProfile.pfpId;
+        this.state.profile.customPhoto = this.tempProfile.customPhoto;
+        this.saveState();
+        this.updateProfileUI();
+        document.getElementById('profile-modal')?.classList.add('hidden');
+        this.showToast('Profile updated!');
+      });
+    }
+  }
+
+  showProfileModal() {
+    this.tempProfile = {
+      name: this.state.profile.name || 'Player',
+      pfpId: this.state.profile.pfpId || 'fox',
+      customPhoto: this.state.profile.customPhoto || null
+    };
+
+    const nameInput = document.getElementById('profile-name-input');
+    if (nameInput) {
+      nameInput.value = this.tempProfile.name;
+    }
+    this.renderProfileModalPreview();
+    document.getElementById('profile-modal')?.classList.remove('hidden');
+  }
+
+  renderProfileModalPreview() {
+    const preview = document.getElementById('profile-modal-avatar-preview');
+    if (preview) {
+      preview.innerHTML = getAvatarHTML(this.tempProfile);
+    }
+    document.querySelectorAll('.pfp-choice-item').forEach(item => {
+      const isSelected = !this.tempProfile.customPhoto && item.getAttribute('data-pfp-id') === this.tempProfile.pfpId;
+      item.classList.toggle('selected', isSelected);
+    });
+  }
+
+  setupSettingsSwitches() {
+    // Sound
+    const soundSwitch = document.getElementById('setting-sound');
+    if (soundSwitch) {
+      soundSwitch.checked = this.state.sound;
+      soundSwitch.addEventListener('change', (e) => {
+        this.state.sound = e.target.checked;
+        soundManager.soundEnabled = this.state.sound;
+        this.saveState();
+      });
+    }
+
+    // Haptic
+    const vibSwitch = document.getElementById('setting-vibration');
+    if (vibSwitch) {
+      vibSwitch.checked = this.state.vibration;
+      vibSwitch.addEventListener('change', (e) => {
+        this.state.vibration = e.target.checked;
+        soundManager.vibrationEnabled = this.state.vibration;
+        this.saveState();
+      });
+    }
+
+    // Music
+    const musicSwitch = document.getElementById('setting-music');
+    if (musicSwitch) {
+      musicSwitch.checked = this.state.music;
+      musicSwitch.addEventListener('change', (e) => {
+        this.state.music = e.target.checked;
+        soundManager.musicEnabled = this.state.music;
+        if (this.state.music) soundManager.startMusic();
+        else soundManager.stopMusic();
+        this.saveState();
+      });
+    }
+
+    // Dark Theme Switch
+    const darkThemeSwitch = document.getElementById('setting-dark-theme');
+    if (darkThemeSwitch) {
+      darkThemeSwitch.checked = this.state.darkTheme;
+      darkThemeSwitch.addEventListener('change', (e) => {
+        this.state.darkTheme = e.target.checked;
+        this.applyThemeMode(this.state.darkTheme);
+        this.saveState();
+      });
+    }
+
+    // Guideline
+    const guideSwitch = document.getElementById('setting-guideline');
+    if (guideSwitch) {
+      guideSwitch.checked = this.state.guidelines;
+      guideSwitch.addEventListener('change', (e) => {
+        this.state.guidelines = e.target.checked;
+        if (this.game) this.game.options.showGuidelines = this.state.guidelines;
+        this.saveState();
+      });
+    }
+
+    // Language Button
+    const langBtn = document.getElementById('settings-language-btn');
+    if (langBtn) {
+      langBtn.addEventListener('click', () => {
+        soundManager.playTap();
+        this.showLanguageModal();
+      });
+    }
+
+    // Rate Us Modal
+    const rateBtn = document.getElementById('settings-rate-us-btn');
+    if (rateBtn) {
+      rateBtn.addEventListener('click', () => {
+        soundManager.playTap();
+        document.getElementById('rate-us-modal')?.classList.remove('hidden');
+      });
+    }
+
+    const rateSubmitBtn = document.getElementById('rate-submit-btn');
+    if (rateSubmitBtn) {
+      rateSubmitBtn.addEventListener('click', () => {
+        soundManager.playTap();
+        document.getElementById('rate-us-modal')?.classList.add('hidden');
+        this.showToast('Thank you for rating Arrows!!');
+      });
+    }
+
+    document.querySelectorAll('.rate-star').forEach(star => {
+      star.addEventListener('click', () => {
+        const val = parseInt(star.getAttribute('data-star') || '5', 10);
+        document.querySelectorAll('.rate-star').forEach(s => {
+          const sVal = parseInt(s.getAttribute('data-star') || '0', 10);
+          s.classList.toggle('active', sVal <= val);
+        });
+      });
+    });
+
+    // Feedback
+    const feedbackBtn = document.getElementById('settings-feedback-btn');
+    if (feedbackBtn) {
+      feedbackBtn.addEventListener('click', () => {
+        soundManager.playTap();
+        document.getElementById('feedback-modal')?.classList.remove('hidden');
+      });
+    }
+
+    const feedbackSubmitBtn = document.getElementById('feedback-submit-btn');
+    if (feedbackSubmitBtn) {
+      feedbackSubmitBtn.addEventListener('click', () => {
+        soundManager.playTap();
+        const textarea = document.getElementById('feedback-textarea');
+        if (textarea) textarea.value = '';
+        document.getElementById('feedback-modal')?.classList.add('hidden');
+        this.showToast(t('feedbackSuccess'));
+      });
+    }
+
+    // Privacy
+    const privacyBtn = document.getElementById('settings-privacy-btn');
+    if (privacyBtn) {
+      privacyBtn.addEventListener('click', () => {
+        soundManager.playTap();
+        document.getElementById('privacy-modal')?.classList.remove('hidden');
+      });
+    }
+
+    // Terms
+    const termsBtn = document.getElementById('settings-terms-btn');
+    if (termsBtn) {
+      termsBtn.addEventListener('click', () => {
+        soundManager.playTap();
+        document.getElementById('terms-modal')?.classList.remove('hidden');
+      });
+    }
+  }
+
+  showLanguageModal() {
+    const list = document.getElementById('language-list-container');
+    if (list) {
+      list.innerHTML = SUPPORTED_LANGUAGES.map(lang => {
+        const isCurrent = lang.code === getCurrentLanguage();
+        return `
+          <button class="language-choice-row ${isCurrent ? 'selected' : ''}" data-lang-code="${lang.code}">
+            <span class="lang-native-name">${lang.nativeName}</span>
+            <span class="lang-en-name">${lang.name}</span>
+            ${isCurrent ? '<span class="lang-check">✓</span>' : ''}
+          </button>
+        `;
+      }).join('');
+
+      list.querySelectorAll('.language-choice-row').forEach(row => {
+        row.addEventListener('click', () => {
+          soundManager.playTap();
+          const code = row.getAttribute('data-lang-code');
+          this.state.language = code;
+          setLanguage(code);
+          this.saveState();
+
+          const curName = SUPPORTED_LANGUAGES.find(l => l.code === code)?.nativeName || 'English';
+          const nameSpan = document.getElementById('settings-current-lang-name');
+          if (nameSpan) nameSpan.textContent = curName;
+
+          this.updateHomeLevelDisplay();
+          document.getElementById('language-modal')?.classList.add('hidden');
+        });
+      });
+    }
+
+    document.getElementById('language-modal')?.classList.remove('hidden');
+  }
+
+  applyThemeMode(isDark) {
+    const app = document.getElementById('app-container');
+    if (app) {
+      if (isDark) {
+        app.classList.add('dark-theme');
       } else {
-        diffBadge.textContent = 'Normal';
-        diffBadge.className = 'difficulty-pill normal';
+        app.classList.remove('dark-theme');
       }
     }
 
-    // Update Daily Challenge Card state (locked or unlocked)
-    const dailyCard = document.getElementById('home-daily-card');
-    const dailyLockOverlay = document.getElementById('home-daily-lock-overlay');
-    if (this.state.level < 20) {
-      if (dailyLockOverlay) dailyLockOverlay.classList.remove('hidden');
-    } else {
-      if (dailyLockOverlay) dailyLockOverlay.classList.add('hidden');
-    }
+    const themeId = isDark ? 'slate' : (this.state.theme || 'cream');
+    this.game?.setTheme(themeId);
+  }
 
-    // Update locks on bottom nav icons
-    const collectionNavLock = document.getElementById('nav-collection-lock');
-    if (collectionNavLock) {
-      collectionNavLock.style.display = this.state.level < 8 ? 'inline-block' : 'none';
+  setTheme(themeId) {
+    this.state.theme = themeId;
+    if (this.game) {
+      this.game.setTheme(themeId);
     }
-    const challengeNavLock = document.getElementById('nav-challenge-lock');
-    if (challengeNavLock) {
-      challengeNavLock.style.display = this.state.level < 20 ? 'inline-block' : 'none';
+    this.saveState();
+  }
+
+  toggleThemePicker() {
+    const popup = document.getElementById('theme-picker-popup');
+    if (popup) {
+      popup.classList.toggle('hidden');
+    }
+  }
+
+  applyThemeToDOM(theme) {
+    document.documentElement.style.setProperty('--game-bg', theme.bg);
+    document.documentElement.style.setProperty('--game-text', theme.textColor);
+    document.documentElement.style.setProperty('--game-accent', theme.accent);
+  }
+
+  showInGameSettingsModal() {
+    const igModal = document.getElementById('in-game-settings-modal');
+    if (igModal) {
+      const snd = document.getElementById('ig-setting-sound');
+      const vib = document.getElementById('ig-setting-vibration');
+      const mus = document.getElementById('ig-setting-music');
+
+      if (snd) snd.checked = this.state.sound;
+      if (vib) vib.checked = this.state.vibration;
+      if (mus) mus.checked = this.state.music;
+
+      igModal.classList.remove('hidden');
     }
   }
 
@@ -337,218 +704,95 @@ export class UIManager {
     const levelData = generateLevel(levelNum);
     this.navigateTo('game');
 
-    // Update In-Game Header
-    const titleEl = document.getElementById('in-game-title');
-    if (titleEl) titleEl.textContent = `Level ${levelNum}`;
+    const inGameTitle = document.getElementById('in-game-title');
+    const inGameSubtitle = document.getElementById('in-game-subtitle');
+    if (inGameTitle) inGameTitle.textContent = `${t('level')} ${levelNum}`;
+    if (inGameSubtitle) inGameSubtitle.textContent = levelData.difficulty === 'Hard' ? t('hard') : t('normal');
 
-    const subtitleEl = document.getElementById('in-game-subtitle');
-    if (subtitleEl) {
-      if (levelData.difficulty === 'Hard') {
-        subtitleEl.textContent = 'Hard';
-        subtitleEl.style.color = '#8b5cf6';
+    this.game.loadLevel(levelData);
+
+    const zoomToast = document.getElementById('zoom-notice-toast');
+    if (zoomToast) {
+      if (levelData.difficulty === 'Hard' || levelData.width > 10) {
+        zoomToast.classList.remove('hidden');
+        setTimeout(() => zoomToast.classList.add('hidden'), 2500);
       } else {
-        subtitleEl.textContent = 'Normal';
-        subtitleEl.style.color = 'inherit';
+        zoomToast.classList.add('hidden');
       }
     }
+  }
 
-    // Show "Pinch to zoom" guidance if hard level
-    const zoomNotice = document.getElementById('zoom-notice-toast');
-    if (zoomNotice) {
-      if (levelData.difficulty === 'Hard' || levelData.arrows.length > 15) {
-        zoomNotice.classList.remove('hidden');
-        setTimeout(() => zoomNotice.classList.add('hidden'), 3200);
-      } else {
-        zoomNotice.classList.add('hidden');
-      }
-    }
+  startDailyChallenge(day) {
+    const date = new Date();
+    const levelData = getDailyChallengeLevel(date.getFullYear(), date.getMonth(), day);
+    this.navigateTo('game');
+
+    const inGameTitle = document.getElementById('in-game-title');
+    const inGameSubtitle = document.getElementById('in-game-subtitle');
+    if (inGameTitle) inGameTitle.textContent = `Daily - Day ${day}`;
+    if (inGameSubtitle) inGameSubtitle.textContent = t('daily');
 
     this.game.loadLevel(levelData);
   }
 
-  startDailyChallenge(day) {
-    const dailyData = getDailyChallengeLevel(this.selectedDailyYear, this.selectedDailyMonth + 1, day);
-    this.navigateTo('game');
-
-    const titleEl = document.getElementById('in-game-title');
-    if (titleEl) titleEl.textContent = `Daily ${day}`;
-
-    const subtitleEl = document.getElementById('in-game-subtitle');
-    if (subtitleEl) {
-      subtitleEl.textContent = 'Challenge';
-      subtitleEl.style.color = '#10b981';
-    }
-
-    this.game.loadLevel(dailyData);
-  }
-
-  // RED DROPLETS ( Mistouches / Lives ) - Explicit requirement: "and the droplets in game red which are blue in photos"
-  renderDroplets(livesRemaining) {
+  renderDroplets(lives) {
     const container = document.getElementById('game-droplets-container');
     if (!container) return;
-    container.innerHTML = '';
 
+    let html = '';
     for (let i = 0; i < 3; i++) {
-      const drop = document.createElement('span');
-      drop.className = `droplet-icon ${i < livesRemaining ? 'active' : 'empty'}`;
-      // SVG red droplet icon
-      drop.innerHTML = `
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="${i < livesRemaining ? '#ef4444' : '#cbd5e1'}">
-          <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" />
-        </svg>
+      const active = i < lives;
+      html += `
+        <span class="droplet-icon ${active ? 'active' : 'empty'}">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="${active ? '#ef4444' : '#cbd5e1'}">
+            <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+          </svg>
+        </span>
       `;
-      container.appendChild(drop);
     }
+    container.innerHTML = html;
   }
 
-  toggleThemePicker() {
-    const popup = document.getElementById('theme-picker-popup');
-    popup?.classList.toggle('hidden');
-  }
-
-  setTheme(themeId) {
-    this.state.theme = themeId;
-    this.saveState();
-    this.game.setTheme(themeId);
-    this.applyThemeToDOM(THEMES[themeId]);
-  }
-
-  applyThemeToDOM(theme) {
-    if (!theme) return;
-    document.documentElement.style.setProperty('--game-bg', theme.bg);
-    document.documentElement.style.setProperty('--game-text', theme.textColor);
-    document.documentElement.style.setProperty('--game-accent', theme.accent);
-
-    // Active indicator in theme picker
-    document.querySelectorAll('[data-theme-choice]').forEach(el => {
-      if (el.getAttribute('data-theme-choice') === theme.id) {
-        el.classList.add('selected');
-      } else {
-        el.classList.remove('selected');
-      }
-    });
-  }
-
-  setupSettingsSwitches() {
-    const soundToggle = document.getElementById('setting-sound');
-    if (soundToggle) {
-      soundToggle.checked = this.state.sound;
-      soundToggle.addEventListener('change', (e) => {
-        this.state.sound = e.target.checked;
-        soundManager.soundEnabled = e.target.checked;
-        this.saveState();
-      });
-    }
-
-    const vibrationToggle = document.getElementById('setting-vibration');
-    if (vibrationToggle) {
-      vibrationToggle.checked = this.state.vibration;
-      vibrationToggle.addEventListener('change', (e) => {
-        this.state.vibration = e.target.checked;
-        soundManager.vibrationEnabled = e.target.checked;
-        this.saveState();
-      });
-    }
-
-    const musicToggle = document.getElementById('setting-music');
-    if (musicToggle) {
-      musicToggle.checked = this.state.music;
-      musicToggle.addEventListener('change', (e) => {
-        this.state.music = e.target.checked;
-        soundManager.setMusic(e.target.checked);
-        this.saveState();
-      });
-    }
-
-    const voiceToggle = document.getElementById('setting-voice');
-    if (voiceToggle) {
-      voiceToggle.checked = this.state.voice;
-      voiceToggle.addEventListener('change', (e) => {
-        this.state.voice = e.target.checked;
-        soundManager.voiceEnabled = e.target.checked;
-        this.saveState();
-      });
-    }
-
-    const guidelineToggle = document.getElementById('setting-guideline');
-    if (guidelineToggle) {
-      guidelineToggle.checked = this.state.guidelines;
-      guidelineToggle.addEventListener('change', (e) => {
-        this.state.guidelines = e.target.checked;
-        this.game.options.showGuidelines = e.target.checked;
-        this.saveState();
-      });
-    }
-
-    // Modal triggers in settings
-    document.getElementById('settings-rate-us-btn')?.addEventListener('click', () => {
-      soundManager.playTap();
-      document.getElementById('rate-us-modal')?.classList.remove('hidden');
-    });
-
-    document.getElementById('settings-feedback-btn')?.addEventListener('click', () => {
-      soundManager.playTap();
-      document.getElementById('feedback-modal')?.classList.remove('hidden');
-    });
-
-    document.getElementById('settings-privacy-btn')?.addEventListener('click', () => {
-      soundManager.playTap();
-      document.getElementById('privacy-modal')?.classList.remove('hidden');
-    });
-
-    document.getElementById('settings-terms-btn')?.addEventListener('click', () => {
-      soundManager.playTap();
-      document.getElementById('terms-modal')?.classList.remove('hidden');
-    });
-
-    // Star rating click handler in Rate Us modal
-    document.querySelectorAll('.rate-star').forEach(star => {
-      star.addEventListener('click', (e) => {
-        soundManager.playTap();
-        const rating = parseInt(star.getAttribute('data-star') || '5', 10);
-        document.querySelectorAll('.rate-star').forEach(s => {
-          const sRating = parseInt(s.getAttribute('data-star') || '0', 10);
-          if (sRating <= rating) {
-            s.classList.add('active');
-          } else {
-            s.classList.remove('active');
-          }
-        });
-      });
-    });
-
-    document.getElementById('rate-submit-btn')?.addEventListener('click', () => {
-      soundManager.playTap();
-      this.showToast('Thank you for your rating! ⭐');
-      document.getElementById('rate-us-modal')?.classList.add('hidden');
-    });
-  }
-
-  showInGameSettingsModal() {
-    const modal = document.getElementById('in-game-settings-modal');
+  showVictoryModal(stats) {
+    const modal = document.getElementById('victory-modal');
     if (!modal) return;
 
-    // Sync in-game toggles
-    const igSound = document.getElementById('ig-setting-sound');
-    if (igSound) igSound.checked = this.state.sound;
+    const diffEl = document.getElementById('victory-difficulty');
+    const timeEl = document.getElementById('victory-time');
+    const scoreEl = document.getElementById('victory-score');
+    const accEl = document.getElementById('victory-accuracy');
+    const mistEl = document.getElementById('victory-mistakes');
+    const hintEl = document.getElementById('victory-hints');
 
-    const igVib = document.getElementById('ig-setting-vibration');
-    if (igVib) igVib.checked = this.state.vibration;
+    if (diffEl) diffEl.textContent = stats.level?.difficulty || 'Normal';
+    if (timeEl) {
+      const m = String(Math.floor(stats.time / 60)).padStart(2, '0');
+      const s = String(stats.time % 60).padStart(2, '0');
+      timeEl.textContent = `${m}:${s}`;
+    }
+    if (scoreEl) scoreEl.textContent = String(stats.score || 1000);
+    if (accEl) accEl.textContent = `🎯 ${stats.accuracy || 100}%`;
+    if (mistEl) mistEl.textContent = `× ${stats.mistakes || 0}`;
+    if (hintEl) hintEl.textContent = `💡 ${stats.hintsUsed || 0}`;
 
-    const igMusic = document.getElementById('ig-setting-music');
-    if (igMusic) igMusic.checked = this.state.music;
-
-    const igVoice = document.getElementById('ig-setting-voice');
-    if (igVoice) igVoice.checked = this.state.voice;
+    // Level progress track
+    const track = document.getElementById('victory-level-track');
+    if (track) {
+      const cur = this.state.level;
+      let html = '';
+      for (let i = Math.max(1, cur - 1); i <= cur + 2; i++) {
+        html += `<span class="track-dot ${i === cur ? 'current' : ''}">${i}</span>`;
+      }
+      track.innerHTML = html;
+    }
 
     modal.classList.remove('hidden');
+  }
 
-    const igRestart = document.getElementById('ig-restart-btn');
-    if (igRestart) {
-      igRestart.onclick = () => {
-        modal.classList.add('hidden');
-        this.game.restartLevel();
-      };
+  showGameOverModal(stats) {
+    const modal = document.getElementById('gameover-modal');
+    if (modal) {
+      modal.classList.remove('hidden');
     }
   }
 
@@ -557,302 +801,108 @@ export class UIManager {
     if (infoBtn) {
       infoBtn.addEventListener('click', () => {
         soundManager.playTap();
-        this.showDailyInfoModal();
+        document.getElementById('daily-challenge-info-modal')?.classList.remove('hidden');
       });
     }
 
-    const playDailyBtn = document.getElementById('challenge-play-btn');
-    if (playDailyBtn) {
-      playDailyBtn.addEventListener('click', () => {
+    const dailyContBtn = document.getElementById('daily-info-continue-btn');
+    if (dailyContBtn) {
+      let slide = 1;
+      dailyContBtn.addEventListener('click', () => {
+        soundManager.playTap();
+        if (slide === 1) {
+          document.getElementById('daily-slide-1')?.classList.add('hidden');
+          document.getElementById('daily-slide-2')?.classList.remove('hidden');
+          document.getElementById('daily-dot-1')?.classList.remove('active');
+          document.getElementById('daily-dot-2')?.classList.add('active');
+          dailyContBtn.textContent = 'Got It!';
+          slide = 2;
+        } else {
+          document.getElementById('daily-challenge-info-modal')?.classList.add('hidden');
+          document.getElementById('daily-slide-2')?.classList.add('hidden');
+          document.getElementById('daily-slide-1')?.classList.remove('hidden');
+          document.getElementById('daily-dot-2')?.classList.remove('active');
+          document.getElementById('daily-dot-1')?.classList.add('active');
+          dailyContBtn.textContent = 'Continue';
+          slide = 1;
+        }
+      });
+    }
+
+    const challengePlayBtn = document.getElementById('challenge-play-btn');
+    if (challengePlayBtn) {
+      challengePlayBtn.addEventListener('click', () => {
         soundManager.playTap();
         this.startDailyChallenge(this.selectedDailyDay);
       });
     }
-
-    // Daily info modal carousel pagination
-    const dailyInfoCarouselBtn = document.getElementById('daily-info-continue-btn');
-    if (dailyInfoCarouselBtn) {
-      dailyInfoCarouselBtn.addEventListener('click', () => {
-        soundManager.playTap();
-        const slide1 = document.getElementById('daily-slide-1');
-        const slide2 = document.getElementById('daily-slide-2');
-        const dot1 = document.getElementById('daily-dot-1');
-        const dot2 = document.getElementById('daily-dot-2');
-
-        if (!slide1.classList.contains('hidden')) {
-          slide1.classList.add('hidden');
-          slide2.classList.remove('hidden');
-          dot1.classList.remove('active');
-          dot2.classList.add('active');
-        } else {
-          document.getElementById('daily-challenge-info-modal')?.classList.add('hidden');
-          slide2.classList.add('hidden');
-          slide1.classList.remove('hidden');
-          dot2.classList.remove('active');
-          dot1.classList.add('active');
-        }
-      });
-    }
   }
 
-  renderChallengeScreen() {
-    const calendarGrid = document.getElementById('calendar-days-grid');
-    if (!calendarGrid) return;
-    calendarGrid.innerHTML = '';
+  renderCalendar() {
+    const grid = document.getElementById('calendar-days-grid');
+    if (!grid) return;
 
     const daysInMonth = 31;
-    // October 2026 starts on Thursday (index 3 if Monday=0)
-    const firstDayOffset = 3;
+    const startDayOffset = 3; // October starts on Thursday
+    let html = '';
 
-    // Blank cells before day 1
-    for (let i = 0; i < firstDayOffset; i++) {
-      const blank = document.createElement('div');
-      blank.className = 'calendar-day blank';
-      calendarGrid.appendChild(blank);
+    for (let i = 0; i < startDayOffset; i++) {
+      html += '<div class="calendar-day blank"></div>';
     }
-
-    let completedDotsCount = 0;
 
     for (let day = 1; day <= daysInMonth; day++) {
-      const dayCell = document.createElement('div');
-      dayCell.className = 'calendar-day';
-      if (day === this.selectedDailyDay) {
-        dayCell.classList.add('selected');
-      }
-
-      const dateKey = `2026-10-${String(day).padStart(2, '0')}`;
-      const isCompleted = this.state.completedDailyChallenges[dateKey];
-      if (isCompleted) {
-        completedDotsCount++;
-      }
-
-      dayCell.innerHTML = `
-        <span class="day-number">${day}</span>
-        ${isCompleted ? '<span class="green-dot">●</span>' : ''}
+      const isSelected = day === this.selectedDailyDay;
+      const isCompleted = !!this.state.completedDailyChallenges[`2026-10-${day}`];
+      html += `
+        <div class="calendar-day ${isSelected ? 'selected' : ''}" data-day="${day}">
+          <span>${day}</span>
+          ${isCompleted ? '<span class="green-dot">●</span>' : ''}
+        </div>
       `;
+    }
 
-      dayCell.addEventListener('click', () => {
+    grid.innerHTML = html;
+
+    grid.querySelectorAll('.calendar-day[data-day]').forEach(el => {
+      el.addEventListener('click', () => {
         soundManager.playTap();
-        this.selectedDailyDay = day;
-        document.querySelectorAll('.calendar-day').forEach(c => c.classList.remove('selected'));
-        dayCell.classList.add('selected');
-        document.getElementById('challenge-selected-day-text').textContent = `Day ${day} Challenge`;
+        const d = parseInt(el.getAttribute('data-day') || '1', 10);
+        this.selectedDailyDay = d;
+        this.renderCalendar();
+        const label = document.getElementById('challenge-selected-day-text');
+        if (label) label.textContent = `Day ${d} Challenge`;
       });
-
-      calendarGrid.appendChild(dayCell);
-    }
-
-    // Update progress bar
-    const progressFill = document.getElementById('challenge-progress-fill');
-    if (progressFill) {
-      progressFill.style.width = `${(completedDotsCount / 31) * 100}%`;
-    }
-    const dotCountEl = document.getElementById('challenge-dot-count');
-    if (dotCountEl) {
-      dotCountEl.textContent = completedDotsCount;
-    }
-  }
-
-  showDailyInfoModal() {
-    const modal = document.getElementById('daily-challenge-info-modal');
-    const slide1 = document.getElementById('daily-slide-1');
-    const slide2 = document.getElementById('daily-slide-2');
-    const dot1 = document.getElementById('daily-dot-1');
-    const dot2 = document.getElementById('daily-dot-2');
-
-    slide1?.classList.remove('hidden');
-    slide2?.classList.add('hidden');
-    dot1?.classList.add('active');
-    dot2?.classList.remove('active');
-
-    modal?.classList.remove('hidden');
+    });
   }
 
   renderCollectionScreen() {
-    // Records
-    document.getElementById('record-longest-streak').textContent = this.state.records.longestStreak;
-    document.getElementById('record-highest-win').textContent = this.state.records.highestWinStreak;
-    document.getElementById('record-most-wins').textContent = this.state.records.mostWins;
+    const container = document.getElementById('collection-trophies-container');
+    if (!container) return;
 
-    // Challenge trophies grid (12 months)
-    const trophiesContainer = document.getElementById('collection-trophies-container');
-    if (trophiesContainer) {
-      trophiesContainer.innerHTML = '';
-      const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-      const days = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-
-      months.forEach((m, idx) => {
-        const item = document.createElement('div');
-        item.className = 'trophy-card';
-        item.innerHTML = `
-          <div class="trophy-model">
-            <svg viewBox="0 0 100 100" width="70" height="70">
-              <path d="M25 25 L75 25 L65 60 C65 72 55 76 50 76 C45 76 35 72 35 60 Z" fill="#dbeafe" stroke="#93c5fd" stroke-width="2"/>
-              <path d="M25 32 C15 32 15 50 25 50" fill="none" stroke="#93c5fd" stroke-width="4" stroke-linecap="round"/>
-              <path d="M75 32 C85 32 85 50 75 50" fill="none" stroke="#93c5fd" stroke-width="4" stroke-linecap="round"/>
-              <rect x="44" y="76" width="12" height="12" fill="#bfdbfe"/>
-              <rect x="35" y="88" width="30" height="6" rx="3" fill="#93c5fd"/>
-            </svg>
-          </div>
-          <div class="trophy-name">${m}</div>
-          <div class="trophy-stat">0 of ${days[idx]}</div>
-        `;
-        trophiesContainer.appendChild(item);
-      });
-    }
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    container.innerHTML = months.map((m, idx) => `
+      <div class="trophy-card">
+        <div style="font-size: 32px; filter: ${idx === 9 ? 'none' : 'grayscale(1)'}; opacity: ${idx === 9 ? 1 : 0.4};">🏆</div>
+        <div class="trophy-name">${m} 2026</div>
+        <div class="trophy-stat">${idx === 9 ? 'In Progress' : 'Locked'}</div>
+      </div>
+    `).join('');
   }
 
-  renderSettingsScreen() {
-    // Ensure clean white background and black text as explicitly required
-    const screen = document.getElementById('settings-screen');
-    if (screen) {
-      screen.style.backgroundColor = '#ffffff';
-      screen.style.color = '#111827';
-    }
-  }
-
-  showVictoryModal(stats) {
-    const modal = document.getElementById('victory-modal');
-    if (!modal) return;
-
-    // Title variation based on performance
-    const titleEl = document.getElementById('victory-title');
-    if (titleEl) {
-      if (stats.mistakes === 0) {
-        titleEl.textContent = 'Flawless!';
-      } else if (stats.mistakes <= 1) {
-        titleEl.textContent = 'Perfect!';
-      } else {
-        titleEl.textContent = 'Comeback Win!';
-      }
-    }
-
-    // Stats
-    document.getElementById('victory-difficulty').textContent = stats.level.difficulty;
-    const mins = String(Math.floor(stats.time / 60)).padStart(2, '0');
-    const secs = String(stats.time % 60).padStart(2, '0');
-    document.getElementById('victory-time').textContent = `${mins}:${secs}`;
-    document.getElementById('victory-score').textContent = stats.score;
-    document.getElementById('victory-today-levels').textContent = stats.level.id;
-    document.getElementById('victory-accuracy').textContent = `${stats.accuracy}%`;
-    document.getElementById('victory-mistakes').textContent = `× ${stats.mistakes}`;
-    document.getElementById('victory-hints').textContent = `💡 ${stats.hintsUsed}`;
-
-    // Level track dots
-    const trackContainer = document.getElementById('victory-level-track');
-    if (trackContainer) {
-      trackContainer.innerHTML = '';
-      const curr = stats.level.id;
-      for (let i = Math.max(1, curr - 2); i <= curr + 2; i++) {
-        const dot = document.createElement('div');
-        dot.className = `track-dot ${i === curr ? 'current' : ''}`;
-        dot.textContent = i;
-        trackContainer.appendChild(dot);
-      }
-    }
-
-    // Advance player level if playing normal campaign
-    if (!stats.level.isDaily && stats.level.id === this.state.level) {
-      this.state.level = Math.min(5000, this.state.level + 1);
-      this.state.maxLevelReached = Math.max(this.state.maxLevelReached, this.state.level);
-      this.state.records.mostWins++;
-      this.saveState();
-    } else if (stats.level.isDaily) {
-      const dateKey = `2026-10-${String(stats.level.day).padStart(2, '0')}`;
-      this.state.completedDailyChallenges[dateKey] = true;
-      this.saveState();
-    }
-
-    modal.classList.remove('hidden');
-
-    document.getElementById('victory-next-btn').onclick = () => {
-      soundManager.playTap();
-      modal.classList.add('hidden');
-      if (stats.level.isDaily) {
-        this.navigateTo('challenge');
-      } else {
-        this.startLevel(this.state.level);
-      }
-    };
-
-    document.getElementById('victory-home-btn').onclick = () => {
-      soundManager.playTap();
-      modal.classList.add('hidden');
-      this.navigateTo('home');
-    };
-  }
-
-  showGameOverModal(stats) {
-    const modal = document.getElementById('gameover-modal');
-    if (!modal) return;
-    modal.classList.remove('hidden');
-
-    document.getElementById('gameover-retry-btn').onclick = () => {
-      soundManager.playTap();
-      modal.classList.add('hidden');
-      this.game.restartLevel();
-    };
-
-    document.getElementById('gameover-revive-btn').onclick = () => {
-      soundManager.playTap();
-      modal.classList.add('hidden');
-      this.game.revive();
-      this.showToast('Revived with 2 lives! Keep going.');
-    };
-
-    document.getElementById('gameover-home-btn').onclick = () => {
-      soundManager.playTap();
-      modal.classList.add('hidden');
-      this.navigateTo('home');
-    };
-  }
-
-  showStreakModal() {
-    const modal = document.getElementById('streak-modal');
-    if (!modal) return;
-    modal.classList.remove('hidden');
-  }
-
-  showLevelSelectModal() {
-    const modal = document.getElementById('level-select-modal');
-    const input = document.getElementById('level-select-input');
-    if (!modal || !input) return;
-
-    input.value = this.state.level;
-    modal.classList.remove('hidden');
-
-    document.getElementById('level-select-confirm-btn').onclick = () => {
-      soundManager.playTap();
-      let chosen = parseInt(input.value, 10);
-      if (isNaN(chosen) || chosen < 1) chosen = 1;
-      if (chosen > 5000) chosen = 5000;
-      this.state.level = chosen;
-      this.saveState();
-      modal.classList.add('hidden');
-      this.renderHomeScreen();
-      this.startLevel(chosen);
-    };
-  }
-
-  showLockToast(msg) {
-    this.showToast(msg, 3000);
-    soundManager.playError();
-  }
-
-  showToast(message, duration = 2500) {
+  showToast(message) {
     const toast = document.getElementById('app-toast');
     if (!toast) return;
     toast.textContent = message;
     toast.classList.remove('hidden');
     toast.classList.add('visible');
-
     setTimeout(() => {
       toast.classList.remove('visible');
-      setTimeout(() => toast.classList.add('hidden'), 300);
-    }, duration);
+      setTimeout(() => toast.classList.add('hidden'), 250);
+    }, 2800);
   }
 }
 
+// Initialize on DOM load
 window.addEventListener('DOMContentLoaded', () => {
   window.uiManager = new UIManager();
 });
